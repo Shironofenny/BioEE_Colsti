@@ -1,0 +1,69 @@
+\documentclass{article}
+
+% Set margins:
+\hoffset = -1.3in
+\voffset = -0.9in
+\textheight = 680pt
+\textwidth = 520pt
+
+% Mathematic libraries
+\usepackage{amsmath}
+\usepackage{amssymb}
+\newcommand{\diff}{\mathrm{d}}
+\newcommand{\me}{\mathrm{e}}
+\newcommand{\mi}{\mathrm{i}}
+
+% Symbol libraries
+\usepackage{textcomp}
+
+% Graphic libraries
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{caption}
+\usepackage{subcaption}
+
+% Color of text
+\usepackage[usenames,dvipsnames]{color}
+
+% Style of text
+\usepackage{times}
+
+% Enumerate label libraries
+\usepackage{enumitem}
+
+% Multi-column text display
+\usepackage{multicol}
+
+% Avoid floating
+\newenvironment{Figure}
+  {\par\medskip\noindent\minipage{\linewidth}}
+	{\endminipage\par\medskip}
+
+% Configuration of the title format
+\usepackage{titlesec}
+\titleformat{\section}{\bf}{}{0em}{}
+\titleformat{\subsection}{\centering\bf}{}{0.5em}{}
+
+% Header and footer style
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\rhead{\bf\sf\Large ECC3001PRT \\ Ultra-Low Noise Trans-Impedance Amplifier}
+\cfoot{\thepage}
+\rfoot{Rev. \today}
+\fancypagestyle{firststyle}
+{
+	\renewcommand{\headrulewidth}{0pt}
+	\fancyhf{}
+	\fancyfoot[C]{\thepage}
+	\fancyfoot[R]{Rev. \today}
+}
+
+% Multi-row for tabular
+\usepackage{multirow}
+\usepackage{array}
+
+% Document starts from here
+\begin{document}
+
+\end{document}
