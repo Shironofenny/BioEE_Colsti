@@ -13,7 +13,7 @@
 
 `default_nettype none
 
-module bitfile_fpga(
+module costi_bitfile(
    input  wire [7:0]  hi_in,
    output wire [1:0]  hi_out,
    inout  wire [15:0] hi_inout,
@@ -75,7 +75,7 @@ wire clk1out;
 wire adc_clk;
 
 BioEE_clkdivider clk1divider ( 	.clkin(clk1locked), 
-											.integerdivider(32'd100000000), 
+											.integerdivider(31'd100000000), 
 											.enable(1'b1),
 											.clkout(clk1out) );
 
