@@ -29,7 +29,7 @@ OK_DATA_TRIGGER=0x00
 # Below are constant configurations for genenral software requirement
 # -------------------------------------------------------------------
 
-LOG_FILE_NAME = 'coins_runtime.log'
+LOG_FILE_NAME = 'costi_runtime.log'
 
 # Load from xml to get software configurations
 # PFN

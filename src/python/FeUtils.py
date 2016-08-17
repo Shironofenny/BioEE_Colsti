@@ -20,3 +20,10 @@ def feFindDir(dirname, hier):
 	# If can't find the directory in defined number of hierachies, then return None
 	return None
 
+class LogFile(file):
+	# A subclass of file just to have a more convienient way to write logs
+	def __init__(self, name, mode = 'r'):
+		self = file.__init__(self, name, mode)
+
+	def writeLog(self, string):
+		self.write(string + '\n')
