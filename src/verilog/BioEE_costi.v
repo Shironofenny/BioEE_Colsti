@@ -68,9 +68,6 @@ wire        btpipeO_adc_block;
 wire        btpipeO_adc_read;
 wire        btpipeO_adc_ready;
 
-
-assign      global_reset = bioee_wirein_00[15];
-
 //========================================================================
 // OPAL KELLY INTERFACE INSTANTIATIONS
 //========================================================================
@@ -110,6 +107,8 @@ okBTPipeOut epA0 (.ok1(ok1), .ok2(ok2),
 // Spreadsheet (alias) for certain wires
 //========================================================================
 
+assign global_reset = bioee_wirein_00[15];
+
 wire controlUpdateTrigger;
 wire switchControl1;
 wire switchControl2;
@@ -122,11 +121,9 @@ assign switchControl2 = bioee_wirein_00[1];
 assign switchControl3 = bioee_wirein_00[2];
 assign switchControl4 = bioee_wirein_00[3];
 
-wire dac1SetTrigger;
-wire dac2SetTrigger;
+wire dacSetTrigger;
 
-assign dac1SetTrigger = bioee_triggerin_40[1];
-assign dac2SetTrigger = bioee_triggerin_40[2];
+assign dacSetTrigger = bioee_triggerin_40[1];
 
 wire dac1AckDataTrigger;
 wire dac1AckSetTrigger;
@@ -211,16 +208,16 @@ wire [3:0] switchSel;
 wire [3:0] dummyLogic;
 
 OBUF OBUF_Y1 ( .I(dacCLK), .O(ybus[1]) );
-OBUF OBUF_Y3_Y7 ( .I(dacDin[1:0]), .O({ybus[7], ybus[3]}) );
-OBUF OBUF_Y5_Y9 ( .I(dacLoad[1:0]), .O({ybus[9], ybus[5]}) );
+OBUF OBUF_Y3_Y7[1:0] ( .I(dacDin[1:0]), .O({ybus[7], ybus[3]}) );
+OBUF OBUF_Y5_Y9[1:0] ( .I(dacLoad[1:0]), .O({ybus[9], ybus[5]}) );
 OBUF OBUF_Y19 ( .I(adcChipSelBar), .O(ybus[19]) );
 OBUF OBUF_Y21 ( .I(adcTM), .O(ybus[21]) );
 OBUF OBUF_Y23 ( .I(adcDin), .O(ybus[23]) );
 IBUF OBUF_Y25 ( .I(ybus[25]), .O(adcDout) );
 OBUF OBUF_Y27 ( .I(adcSCLK), .O(ybus[27]) );
 OBUF OBUF_Y29 ( .I(adcResetBar), .O(ybus[29]) );
-OBUF OBUF_Y31_Y37 ( .I(switchSel[3:0]), .O({ybus[37], ybus[31], ybus[33], ybus[35]}) );
-OBUF OBUF_Y39_Y45 ( .I(dummyLogic[3:0]), .O({ybus[45], ybus[43], ybus[41], ybus[39]}) );
+OBUF OBUF_Y31_Y37[3:0] ( .I(switchSel[3:0]), .O({ybus[37], ybus[31], ybus[33], ybus[35]}) );
+OBUF OBUF_Y39_Y45[3:0] ( .I(dummyLogic[3:0]), .O({ybus[45], ybus[43], ybus[41], ybus[39]}) );
 
 //========================================================================
 // Control Logic
@@ -255,7 +252,10 @@ staticControlOKInterface switchInterface4 (
 			.set_trigger(controlUpdateTrigger)
 			);
 			
-assign dummyLogic = 4'b0000;
+assign dummyLogic[3] = dacLoad[1];
+assign dummyLogic[2] = dacLoad[0];
+assign dummyLogic[1] = dacDin[1];
+assign dummyLogic[0] = dacDin[0];
 
 //========================================================================
 // ADC
@@ -331,7 +331,7 @@ dacOKInterface dac1Controller(
 						.clk( dacCLK10K ), 
 						.din_en( dacWriteEnable ), 
 						.din( dac1InputData [7:0] ), 
-						.set_trig( dac1SetTrigger ), 
+						.set_trig( dacSetTrigger ), 
 						.ack_data( dac1AckDataTrigger ), 
 						.ack_set( dac1AckSetTrigger ), 
 						.dac_din( dacDin[0] ), 
@@ -344,7 +344,7 @@ dacOKInterface dac2Controller(
 						.clk( dacCLK10K ), 
 						.din_en( dacWriteEnable ), 
 						.din( dac2InputData [7:0] ), 
-						.set_trig( dac2SetTrigger ), 
+						.set_trig( dacSetTrigger ), 
 						.ack_data( dac2AckDataTrigger ), 
 						.ack_set( dac2AckSetTrigger ), 
 						.dac_din( dacDin[1] ), 
@@ -355,15 +355,14 @@ dacOKInterface dac2Controller(
 // LED indicators
 //========================================================================
 
-
-wire [7:0] led_signals = {		ledCLK1Hz,
-										0,
-										0,
-										0,
-										0,
-										0,
-										bioee_wirein_00[1],
-										bioee_wirein_00[0]};
+wire [7:0] led_signals = {	ledCLK1Hz,
+									1'b1,
+									1'b0,
+									1'b0,
+									1'b0,
+									1'b0,
+									bioee_wirein_00[1],
+									bioee_wirein_00[0]};
 										
 OBUF OBUF_led[7:0] ( .I(~led_signals[7:0]), .O(led[7:0]) );
 

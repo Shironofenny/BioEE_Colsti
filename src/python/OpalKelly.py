@@ -18,6 +18,7 @@ ok = imp.load_source('ok', source_path)
 
 # User defined modules
 import Constants
+import LogManager
 
 # Few lines to make it a (dirty) singleton
 # If you want to use LogManager in a singleton way, then the correct call would be:
@@ -33,44 +34,57 @@ def Instance():
 
 class OpalKelly:
 	
-	def __init__(self):
+  def __init__(self):
 		self.xem = ok.okCFrontPanel()
 		self.pll = ok.PLL22393()
 		self.activationFlag = False
 
-	def openDevice(self):
+  def openDevice(self):
 		errormsg = self.xem.OpenBySerial("")
 		if (self.xem.NoError == errormsg):
 				self.activationFlag = True
 		return errormsg
 
-	def configurePLL(self):
-		if (self.activationFlag):
-				self.xem.GetPLL22393Configuration(self.pll)
-				self.pll.SetReference(48.0)
-				self.pll.SetPLLParameters(0, 400, 48, True)
-				self.pll.SetOutputSource(0, ok.PLL22393.ClkSrc_PLL0_0)
-				self.pll.SetOutputDivider(0, 4)
-				self.pll.SetOutputEnable(0, True)
-				self.xem.SetPLL22393Configuration(self.pll)
-				return self.pll.GetPLLFrequency(0)
-		else :
-				pass
+  def configurePLL(self):
+    if (self.activationFlag):
+      self.xem.GetPLL22393Configuration(self.pll)
+      self.pll.SetReference(48.0)
+      self.pll.SetPLLParameters(0, 400, 48, True)
+      self.pll.SetOutputSource(0, ok.PLL22393.ClkSrc_PLL0_0)
+      self.pll.SetOutputDivider(0, 4)
+      self.pll.SetOutputEnable(0, True)
+      self.xem.SetPLL22393Configuration(self.pll)
+      return self.pll.GetPLLFrequency(0)
+    else :
+      LogManager.Instance().write("class OpalKelly: PLL configuration failed")
 
-	def loadFile(self, filename):
-		if (self.activationFlag):
-				output = self.xem.ConfigureFPGA(filename)
-		else :
-				pass
+  def loadFile(self, filename):
+    if (self.activationFlag):
+      output = self.xem.ConfigureFPGA(filename)
+      if (self.xem.NoError == output):
+        LogManager.Instance().write("class OpalKelly: Bit file loaded successfully")
+      elif (self.xem.FileError == output):
+        LogManager.Instance().write("class OpalKelly: Invalid file name")
+    else :
+      LogManager.Instance().write("class OpalKelly: No device found, loading bit file aborted")
 
-	def isDeviceConnected(self):
-		return self.activationFlag
+  def isDeviceConnected(self):
+    return self.activationFlag
 
-	def setWireIn(self,addr,data):
-			self.xem.SetWireInValue(addr,data)
+  def setWireIn(self, addr, data):
+    self.xem.SetWireInValue(addr, data)
 
-	def updateWireIns(self):
-			self.xem.updateWireIns()
+  def updateWireIns(self):
+    self.xem.UpdateWireIns()
 
-	def activateTriggerIn(self,addr,bit):
-			self.xem.ActivateTriggerIn(addr,bit)
+  def activateTriggerIn(self, addr, bit):
+    self.xem.ActivateTriggerIn(addr, bit)
+
+  def writeToPipeIn(self, addr, buf):
+    self.xem.WriteToPipeIn(addr, buf)
+
+  def updateTriggerOuts(self):
+    self.xem.UpdateTriggerOuts()
+
+  def isTriggered(self, addr, trigMask):
+    return self.xem.IsTriggered(addr, trigMask)

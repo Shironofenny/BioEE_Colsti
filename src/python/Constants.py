@@ -5,45 +5,32 @@
 
 # This part is for constants related to Opal Kelly
 
-from OKByte import OKByte32
-
-OK_ADDR_COMMAND=0x00
-OK_ADDR_DATA=0x01
-
-# Correspond to OK_ADDR_COMMAND
-OK_STORE_1=0x01
-OK_STORE_2=0x02
-OK_DISPLAY=0x03
-
-# Correspond to OK_ADDR_DATA
-OK_DATA_1=0x01
-OK_DATA_2=0x02
-
-# OK triggers
-OK_ADDR_TRIGGER=0x40
-
-# Correspond to OK_ADDR_TRIGGER
-OK_DATA_TRIGGER=0x00
+from OKByte import OKByte16
 
 # -------------------------------------------------------------------
 # Below are constant configurations for genenral software requirement
 # -------------------------------------------------------------------
 
+# The name of the logfile
 LOG_FILE_NAME = 'costi_runtime.log'
 
-# Load from xml to get software configurations
-# PFN
+# The AVDD voltage of the analog domain
+AVDD = 3.3
 
-# ----------------------------------------------------
-# Below are constant configurations for Bioee_fpga.bit
-# ----------------------------------------------------
+# The number of total codes that DAC supports (2^bits)
+DAC_MAX_CODE = 4095
+
+# Maximum waiting cycles for trigger outs
+TRIGGER_BACK_CYCLE = 50
+
+# -------------------------------------------------------
+# Below are constant configurations for costi_bitfile.bit
+# -------------------------------------------------------
 
 # Address for communication using opal kelly
-OK_ADDR_WIN_CTRL0 = 0x00
-OK_ADDR_WIN_CTRL1 = 0x01
-OK_ADDR_WIN_CTRL2 = 0x02
+OK_ADDR_CONTROL = 0x00
 
-OK_ADDR_WOUT_USELESS = 0x20
+OK_ADDR_WIREOUT = 0x20
 
 OK_ADDR_TRIGIN = 0x40
 OK_ADDR_TRIGOUT = 0x60
@@ -52,9 +39,20 @@ OK_ADDR_PIPEIN_ADC = 0x80
 OK_ADDR_PIPEIN_DAC = 0x81
 OK_ADDR_PIPEOUT = 0xA0
 
+# Bit masks for triggers
+OK_BIT_DAC1_ACK_DATA = 0x01
+OK_BIT_DAC1_ACK_SET = 0x02
+OK_BIT_DAC2_ACK_DATA = 0x04
+OK_BIT_DAC2_ACK_SET = 0x08
+
+OK_BIT_CTRL_UPDATE = 0x00
+OK_BIT_DAC1_SET = 0x02
+OK_BIT_DAC2_SET = 0x04
+
 # Corresponding data:
 # Data for wirein, control 0
-OK_DATA_WIN_CTRL0_RESET = 0x8000
+OK_DATA_IDLE = 0x0000
+OK_DATA_RESET = 0x8000
 OK_DATA_WIN_CTRL0_DACENABLE = 0x0080
 OK_DATA_WIN_CTRL0_NULL = 0x0000
 
@@ -64,7 +62,7 @@ OK_DATA_PIN_ADC_NCS = 0x0002
 OK_DATA_PIN_ADC_BEGIN = 0x0004
 
 # Basic bit configuration
-BIT = OKByte32(16)
+BIT = OKByte16(16)
 BIT[0] = 0x0001
 BIT[1] = 0x0002
 BIT[2] = 0x0004
@@ -140,7 +138,7 @@ OK_CHANNELMAP = [[1, 4], [1, 3], [1, 2], [1, 6], [1, 5], [1, 7],
 								 [5, 0], [5, 1], [5, 2], [5, 3], [5, 4], [5, 5], [5, 6], [5, 7],
 								 [1, 0], [1, 1]]
 
-OK_ADC_VEC = OKByte32(104)
+OK_ADC_VEC = OKByte16(104)
 
 ADC_WRITE 		= 1
 ADC_REPEAT 		= 1

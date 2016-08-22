@@ -19,15 +19,15 @@ assign clkout = clkout_reg;
 
 initial begin
 	clk_counter <= 31'd00;
-	clkout_reg <= 0;
+	clkout_reg <= 1'b0;
 end
 
 always @(posedge clkin) begin
 	if ( (enable==1'b1) && (clk_counter == integerdivider[31:1]) ) begin
-		clk_counter <= 31'd01;
+		clk_counter <= 31'd1;
 		clkout_reg <= ~clkout_reg;
 	end else begin
-		clk_counter <= clk_counter + 1;
+		clk_counter <= clk_counter + 31'd1;
 	end
 end
 

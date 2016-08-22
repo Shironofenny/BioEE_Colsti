@@ -1,4 +1,4 @@
-class OKByte32():
+class OKByte16():
 
 	def __init__(self, length = 0):
 		self.data = bytearray(length*2)
