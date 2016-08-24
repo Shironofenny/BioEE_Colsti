@@ -20,19 +20,7 @@ ok = imp.load_source('ok', source_path)
 import Constants
 import LogManager
 
-# Few lines to make it a (dirty) singleton
-# If you want to use LogManager in a singleton way, then the correct call would be:
-# LogManager.Instance().methodToCall(args)
-
-_instance = None
-
-def Instance():
-	global _instance
-	if _instance is None:
-		_instance = OpalKelly();
-	return _instance
-
-class OpalKelly:
+class OpalKelly(object):
 	
   def __init__(self):
 		self.xem = ok.okCFrontPanel()
@@ -88,3 +76,6 @@ class OpalKelly:
 
   def isTriggered(self, addr, trigMask):
     return self.xem.IsTriggered(addr, trigMask)
+
+  def readFromBlockPipeOut(self, addr, size, buf):
+    self.xem.ReadFromBlockPipeOut(addr, size, buf)

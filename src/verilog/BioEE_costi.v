@@ -131,11 +131,14 @@ wire dac2AckDataTrigger;
 wire dac2AckSetTrigger;
 
 wire adcFillLevelTrigger;
+wire adcFrequencyExceptionTrigger;
 
 assign bioee_triggerout_60[0] = dac1AckDataTrigger;
 assign bioee_triggerout_60[1] = dac1AckSetTrigger;
 assign bioee_triggerout_60[2] = dac2AckDataTrigger;
 assign bioee_triggerout_60[3] = dac2AckSetTrigger;
+
+assign bioee_triggerout_60[4] = adcFrequencyExceptionTrigger;
 
 assign bioee_triggerout_60[7] = adcFillLevelTrigger;
 
@@ -171,20 +174,20 @@ BioEE_clkdivider ledCLKDivider ( .clkin(CLK100M),
 											.clkout(ledCLK1Hz) );
 
 // ADC clock. This is the clock feed into ADC as SCLK
-wire adcCLK10K;
+wire adcCLK1M;
 
 BioEE_clkdivider adcCLKDivider ( .clkin(CLK100M), 
-											.integerdivider(32'd10000), 
+											.integerdivider(32'd100), 
 											.enable(1'b1),
-											.clkout(adcCLK10K) );
+											.clkout(adcCLK1M) );
 							
 // DAC clock. This is the clock feed into DAC as CLK							
-wire dacCLK10K;
+wire dacCLK1M;
 
 BioEE_clkdivider dacCLKDivider ( .clkin(CLK100M), 
-											.integerdivider(32'd10000), 
+											.integerdivider(32'd100), 
 											.enable(1'b1),
-											.clkout(dacCLK10K) );
+											.clkout(dacCLK1M) );
 								
 
 //========================================================================
@@ -251,11 +254,8 @@ staticControlOKInterface switchInterface4 (
 			.dout(switchSel[3]),
 			.set_trigger(controlUpdateTrigger)
 			);
-			
-assign dummyLogic[3] = dacLoad[1];
-assign dummyLogic[2] = dacLoad[0];
-assign dummyLogic[1] = dacDin[1];
-assign dummyLogic[0] = dacDin[0];
+	
+assign dummyLogic = 4'b0000;
 
 //========================================================================
 // ADC
@@ -270,7 +270,7 @@ wire        adcOutputReady;
 adcOKInterface adcController (
 		.rst(global_reset),
 		.ti_clk(ti_clk), 
-		.sclk(adcCLK10K), 
+		.sclk(adcCLK1M), 
 		.din(bioee_pipein_80),
 		.dout(adcOutputData), 
 		.dout_clk(adcOutputCLK),
@@ -281,16 +281,16 @@ adcOKInterface adcController (
 		.adc_dout(adcDout), 
 		.adc_sclk(adcSCLK), 
 		.adc_cs(adcChipSelBar), 
-		.adc_rst(adcResetBar), 
-		.buf_full()
+		.adc_rst(adcResetBar),
+		.adc_frq_exception(adcFrequencyExceptionTrigger)
 		);
 
-// Fifo buffer it through SDRAM here again (but why? everyone is doing this though....)
+// Fifo buffer it through SDRAM here again (but why? everyone is doing this though.... Data rate doesn't seems to be an issue here)
 
 BioEE_sdram_fifo sdramController(
 	.datain(adcOutputData),
 	.write_clk(adcOutputCLK),
-	.write_en(adcOutputReady),
+	.write_en(1'b1),
 	
 	.resetin(global_reset),
 	
@@ -323,12 +323,12 @@ BioEE_sdram_fifo sdramController(
 //		 ADC) uses the rest of the 8 bits.
 //========================================================================
 
-assign dacCLK = dacCLK10K;
+assign dacCLK = dacCLK1M;
 
 dacOKInterface dac1Controller(
 						.rst( global_reset ), 
 						.ti_clk( ti_clk ), 
-						.clk( dacCLK10K ), 
+						.clk( dacCLK ), 
 						.din_en( dacWriteEnable ), 
 						.din( dac1InputData [7:0] ), 
 						.set_trig( dacSetTrigger ), 
@@ -341,7 +341,7 @@ dacOKInterface dac1Controller(
 dacOKInterface dac2Controller(
 						.rst( global_reset ), 
 						.ti_clk( ti_clk ), 
-						.clk( dacCLK10K ), 
+						.clk( dacCLK ), 
 						.din_en( dacWriteEnable ), 
 						.din( dac2InputData [7:0] ), 
 						.set_trig( dacSetTrigger ), 
@@ -356,13 +356,13 @@ dacOKInterface dac2Controller(
 //========================================================================
 
 wire [7:0] led_signals = {	ledCLK1Hz,
-									1'b1,
 									1'b0,
 									1'b0,
 									1'b0,
 									1'b0,
-									bioee_wirein_00[1],
-									bioee_wirein_00[0]};
+									1'b0,
+									1'b0,
+									1'b0};
 										
 OBUF OBUF_led[7:0] ( .I(~led_signals[7:0]), .O(led[7:0]) );
 

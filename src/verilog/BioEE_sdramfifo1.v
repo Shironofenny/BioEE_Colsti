@@ -1,6 +1,6 @@
-
 `default_nettype none
 `timescale 1ns / 1ps
+
 module fifo16w16r_2048(
 	input  [15:0] din,
 	input         rd_clk,
@@ -235,8 +235,9 @@ end
 //------------------------------------------------------------------------
 //------------------------------------------------------------------------
 
-// how many kbytes to fill before triggering?
-assign fill_level_trigger = ((sdram_write_rowaddr-sdram_read_rowaddr) > 15'd32);
+// how many kbytes to fill before triggering? Was 15'd32
+// And I (Yihan Zhang) thought it is too high for real time updates, so I changed it to 1
+assign fill_level_trigger = ((sdram_write_rowaddr-sdram_read_rowaddr) > 15'd1);
 
 
 //------------------------------------------------------------------------
