@@ -27,7 +27,17 @@ TRIGGER_BACK_CYCLE = 50
 # Below are constant configurations for thread management
 # -------------------------------------------------------
 
+RE_DEFAULT_VOLTAGE = 1.25
+WE1_DEFAULT_VOLTAGE = 1.25
+WE2_DEFAULT_VOLTAGE = 1.25
+ADCREF_DEFAULT_VOLTAGE = 3.3
+
+# -------------------------------------------------------
+# Below are constant configurations for thread management
+# -------------------------------------------------------
+
 ADC_DATA_CHECK_INTERVAL = 0.001 # in seconds
+TRIGGER_OUT_CHECK_INTERVAL = 0.0005 # in seconds
 
 # -------------------------------------------------------
 # Below are constant configurations for costi_bitfile.bit
@@ -50,10 +60,12 @@ OK_BIT_DAC1_ACK_DATA = 0x0001
 OK_BIT_DAC1_ACK_SET = 0x0002
 OK_BIT_DAC2_ACK_DATA = 0x0004
 OK_BIT_DAC2_ACK_SET = 0x0008
+OK_BIT_ADC_FREQ_EX = 0x0010
 OK_BIT_SDRAM_READY = 0x0080
 
 OK_BIT_CTRL_UPDATE = 0x0000
 OK_BIT_DAC_SET = 0x0001
+OK_BIT_DAC_FINAL_ACK = 0x0002
 
 # Data for Control signals
 OK_DATA_RESET = 0x8000

@@ -8,10 +8,10 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 import LogManager
 import Constants
-import FeUtils as utils
+import LogFile 
 
 if __name__ == "__main__":
-	logFile = utils.LogFile(Constants.LOG_FILE_NAME, 'w')
+	logFile = LogFile.LogFile(Constants.LOG_FILE_NAME, 'w')
 	LogManager.Instance().addLogMethod(logFile.writeLog, 1)
 	app = QtWidgets.QApplication(sys.argv)
 	app.setStyle("fusion")

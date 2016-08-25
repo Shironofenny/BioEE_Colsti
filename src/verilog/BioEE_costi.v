@@ -116,14 +116,17 @@ wire switchControl3;
 wire switchControl4;
 
 assign controlUpdateTrigger = bioee_triggerin_40[0];
+
 assign switchControl1 = bioee_wirein_00[0];
 assign switchControl2 = bioee_wirein_00[1];
 assign switchControl3 = bioee_wirein_00[2];
 assign switchControl4 = bioee_wirein_00[3];
 
 wire dacSetTrigger;
+//wire dacEndTrigger;
 
 assign dacSetTrigger = bioee_triggerin_40[1];
+//assign dacEndTrigger = bioee_triggerin_40[2];
 
 wire dac1AckDataTrigger;
 wire dac1AckSetTrigger;
@@ -332,6 +335,7 @@ dacOKInterface dac1Controller(
 						.din_en( dacWriteEnable ), 
 						.din( dac1InputData [7:0] ), 
 						.set_trig( dacSetTrigger ), 
+						//.ack_end( dacEndTrigger ),
 						.ack_data( dac1AckDataTrigger ), 
 						.ack_set( dac1AckSetTrigger ), 
 						.dac_din( dacDin[0] ), 
@@ -344,7 +348,8 @@ dacOKInterface dac2Controller(
 						.clk( dacCLK ), 
 						.din_en( dacWriteEnable ), 
 						.din( dac2InputData [7:0] ), 
-						.set_trig( dacSetTrigger ), 
+						.set_trig( dacSetTrigger ),
+						//.ack_end( dacEndTrigger ),						
 						.ack_data( dac2AckDataTrigger ), 
 						.ack_set( dac2AckSetTrigger ), 
 						.dac_din( dacDin[1] ), 

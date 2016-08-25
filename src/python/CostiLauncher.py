@@ -74,7 +74,7 @@ class Costi(QtWidgets.QMainWindow):
     # Change options for pyqtgraph
     pg.setConfigOption('background',(239,235,231))
     pg.setConfigOption('foreground','k')
-
+    
   def linkGUI(self):
     ''' Linking GUI element's to their corresponding logic
     '''
@@ -87,14 +87,22 @@ class Costi(QtWidgets.QMainWindow):
     self.ui.plot1.setMouseEnabled(x=True, y=False)
     self.ui.plot2.setMouseEnabled(x=True, y=False)
 
+    # Write default values to the voltage input line edits
+    self.ui.leSetRE.setText(str(fpga.getREValue()))
+    self.ui.leSetWE1.setText(str(fpga.getWE1Value()))
+    self.ui.leSetWE2.setText(str(fpga.getWE2Value()))
+    self.ui.leSetADCRef.setText(str(fpga.getADCRefValue()))
+
   def bondButtons(self):
     ''' Bond all the buttons of the GUI to their corresponding logic
     '''
     self.ui.action_Load_FPGA.triggered.connect(self.loadBitFile)
     self.ui.action_Connect_FPGA.triggered.connect(self.connectCostiFPGA)
 
-    self.ui.pbSetRE.clicked.connect(self.tryUpdateDAC)
-    self.ui.pbSetWE1.clicked.connect(self.tryConfigureADC)
+    self.ui.pbSetRE.clicked.connect(self.setREValue)
+    self.ui.pbSetWE1.clicked.connect(self.setWE1Value)
+    self.ui.pbSetWE2.clicked.connect(self.setWE2Value)
+    self.ui.pbSetADCRef.clicked.connect(self.setADCRefValue)
 
   def loadBitFile(self):
     ''' Load the corresponding bit file to the device (FPGA, Opal Kelly 3010),
@@ -109,20 +117,54 @@ class Costi(QtWidgets.QMainWindow):
     if fpga.isDeviceConnected() :
       log.write("Loading bit file " + self.filename)
       fpga.loadFile(self.filename.encode('ascii', 'ignore'))
+      fpga.setBitfileLoaded()
       
       # Device should be configured correctly now, so reset is possible
       log.write("Resetting hardware ...")
       fpga.reset()
       log.write("Reset completed!")
+
+      # Run TriggerOut manager
+      log.write("Launching the trigger out manager")
+      fpga.startTriggerOutManagerThread()
+
+      # Automatic update DAC
+      log.write("Loading DACs automatically...")
+      fpga.updateDacs()
+      
+      # Automatic start ADC reading stream thread
+      fpga.configureADC()
+      fpga.startADCDataStreamThread()
     else :
       log.write("No Opal Kelly device connected. Bit file loading aborted.")
 
-  def tryUpdateDAC(self):
-    fpga.updateDacs()
+  def setWE1Value(self):
+    WE1Value = utils.isNumber(self.ui.leSetWE1.text())
+    if WE1Value :
+      fpga.setWE1Value(WE1Value)
+    else :
+      log.write("The value for WE 1 is not legit. Please double check...")
 
-  def tryConfigureADC(self):
-    fpga.configureADC()
-    fpga.startADCDataStreamThread()
+  def setWE2Value(self):
+    WE2Value = utils.isNumber(self.ui.leSetWE2.text())
+    if WE2Value :
+      fpga.setWE2Value(WE2Value)
+    else :
+      log.write("The value for WE 2 is not legit. Please double check...")
+
+  def setREValue(self):
+    REValue = utils.isNumber(self.ui.leSetRE.text())
+    if REValue :
+      fpga.setREValue(REValue)
+    else :
+      log.write("The value for RE is not legit. Please double check...")
+
+  def setADCRefValue(self):
+    ADCRefValue = utils.isNumber(self.ui.leSetADCRef.text())
+    if ADCRefValue :
+      fpga.setADCRefValue(ADCRefValue)
+    else :
+      log.write("The value for ADC Reference is not legit. Please double check...")
 
   def closeEvent(self, event):
     ''' Override function
@@ -131,6 +173,7 @@ class Costi(QtWidgets.QMainWindow):
     print("Killing auto-updating threads ...")
     log.write("Killing auto-updating threads ...")
     fpga.stopADCDataStreamThread()
+    fpga.stopTriggerOutManagerThread()
     print("Closing the connection to the Opal Kelly ...")
     log.write("Closing the connection to the Opal Kelly ...")
     # Wait for the opal kelly components to clean itself properly
