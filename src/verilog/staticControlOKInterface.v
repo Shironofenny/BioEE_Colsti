@@ -28,13 +28,14 @@ module staticControlOKInterface(
 	 // In fact this is just a D-Flip-Flop triggered by the set_trigger signal
 	 
 	 reg dout_reg;
+	 assign dout = dout_reg;
 	 
 	 initial
-		dout_reg <= 0;
+		dout_reg <= 1'b0;
 		
 	 always @ (posedge rst or posedge set_trigger) begin
 		if (rst) begin
-			dout_reg <= 0;
+			dout_reg <= 1'b0;
 		end else begin
 			dout_reg <= din;
 		end

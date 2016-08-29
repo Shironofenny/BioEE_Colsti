@@ -16,6 +16,7 @@ import FeUtils as utils
 import LogManager 
 import Constants
 import CostiFPGA
+import PlotRefresher
 
 from DataAcquireThread import DataAcquireThread
 
@@ -45,8 +46,6 @@ class Costi(QtWidgets.QMainWindow):
 
     # Add status bar into the logging system
     log.addLogMethod(self.ui.statusbar.showMessage, 0)
-    
-    self.linkGUI()
 
     # Connect ot hardware (Opal Kelly XEM3010)
     self.connectCostiFPGA()
@@ -57,6 +56,17 @@ class Costi(QtWidgets.QMainWindow):
       log.write("Welcome to Colony Stimulation Platform @ Bioelectronic Systems Lab.")
     else :
       log.write("Opal Kelly device was not connected successfully, please connect manually.")
+
+    self.plotRefresher = PlotRefresher.PlotRefresher()
+    self.plotRefresher.startPlotRefresherThread()
+
+    self.linkGUI()
+
+    # Timer instance to periodically run main thread.
+    # Follow-up configurations can be found in self.configureDisplays()
+    self.mainThreadTimer = QtCore.QTimer(self)
+
+    self.startMainThread()
 
   def connectCostiFPGA(self):
     fpga.openDevice()
@@ -93,6 +103,19 @@ class Costi(QtWidgets.QMainWindow):
     self.ui.leSetWE2.setText(str(fpga.getWE2Value()))
     self.ui.leSetADCRef.setText(str(fpga.getADCRefValue()))
 
+    # Send display handles of the two graphes to the Plot Refresher
+    self.plotRefresher.setPlot1Handle(self.ui.plot1)
+    self.plotRefresher.setPlot2Handle(self.ui.plot2)
+
+    if fpga.getSwitchState(1) :
+      self.ui.pbSwWe1.setChecked(True)
+    if fpga.getSwitchState(2) :
+      self.ui.pbSwWe2.setChecked(True)
+    if fpga.getSwitchState(3) :
+      self.ui.pbSwEx1.setChecked(True)
+    if fpga.getSwitchState(4) :
+      self.ui.pbSwEx2.setChecked(True)
+    
   def bondButtons(self):
     ''' Bond all the buttons of the GUI to their corresponding logic
     '''
@@ -103,6 +126,11 @@ class Costi(QtWidgets.QMainWindow):
     self.ui.pbSetWE1.clicked.connect(self.setWE1Value)
     self.ui.pbSetWE2.clicked.connect(self.setWE2Value)
     self.ui.pbSetADCRef.clicked.connect(self.setADCRefValue)
+
+    self.ui.pbSwWe1.clicked.connect(fpga.flipSwitch1)
+    self.ui.pbSwWe2.clicked.connect(fpga.flipSwitch2)
+    self.ui.pbSwEx1.clicked.connect(fpga.flipSwitch3)
+    self.ui.pbSwEx2.clicked.connect(fpga.flipSwitch4)
 
   def loadBitFile(self):
     ''' Load the corresponding bit file to the device (FPGA, Opal Kelly 3010),
@@ -123,6 +151,7 @@ class Costi(QtWidgets.QMainWindow):
       log.write("Resetting hardware ...")
       fpga.reset()
       log.write("Reset completed!")
+      fpga.updateSwitches()
 
       # Run TriggerOut manager
       log.write("Launching the trigger out manager")
@@ -166,6 +195,39 @@ class Costi(QtWidgets.QMainWindow):
     else :
       log.write("The value for ADC Reference is not legit. Please double check...")
 
+# -----------------------------------------------------------
+# The following functions are used to start the auto-updating
+# functions in the main thread. It is written in a QTimer way
+# simply because QT doesn't allow multithread access to the 
+# GUI object.
+# -----------------------------------------------------------
+
+  def startMainThread(self):
+    if self.mainThreadTimer.isActive():
+      self.mainThreadTimer.stop()
+    self.mainThreadTimer.timeout.connect(self.mainThread)
+    self.mainThreadTimer.setInterval(Constants.MAIN_UPDATING_INTERVAL)
+    self.mainThreadTimer.setSingleShot(False)
+    self.mainThreadTimer.start()
+
+  def mainThread(self):
+    """ The main loop thread. It should not be running in a separate thread instance, but
+        natively inside this thread. Just call this function after all the configuration 
+        is done in __init__
+    """
+    self.plotRefresher.updatePlots()
+    self.ui.leWE1.setText(self.plotRefresher.peekWE1Value() + " V")
+    self.ui.leWE2.setText(self.plotRefresher.peekWE2Value() + " V")
+    self.ui.leCE.setText(self.plotRefresher.peekCEValue() + " V")
+    self.ui.leRE.setText(self.plotRefresher.peekREValue() + " V")
+    self.ui.leEx1.setText(self.plotRefresher.peekExtraValue(1) + " V")
+    self.ui.leEx2.setText(self.plotRefresher.peekExtraValue(2) + " V")
+    self.ui.leEx3.setText(self.plotRefresher.peekExtraValue(3) + " V")
+    self.ui.leEx4.setText(self.plotRefresher.peekExtraValue(4) + " V")
+
+  def stopMainThread(self):
+    self.mainThreadTimer.stop()
+
   def closeEvent(self, event):
     ''' Override function
         Re-define what to do at user hit quitting the GUI
@@ -174,6 +236,8 @@ class Costi(QtWidgets.QMainWindow):
     log.write("Killing auto-updating threads ...")
     fpga.stopADCDataStreamThread()
     fpga.stopTriggerOutManagerThread()
+    self.plotRefresher.stopPlotRefresherThread()
+    self.stopMainThread()
     print("Closing the connection to the Opal Kelly ...")
     log.write("Closing the connection to the Opal Kelly ...")
     # Wait for the opal kelly components to clean itself properly

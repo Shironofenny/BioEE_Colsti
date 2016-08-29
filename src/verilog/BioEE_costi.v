@@ -51,9 +51,9 @@ wire global_reset;
 // OPAL KELLY INTERFACE SIGNAL DECLARATIONS
 //========================================================================
 
-wire         ti_clk;
-wire [30:0]  ok1;
-wire [16:0]  ok2;
+wire        ti_clk;
+wire [30:0] ok1;
+wire [16:0] ok2;
 
 wire [15:0]	bioee_triggerin_40;
 wire [15:0]	bioee_triggerout_60;
@@ -123,10 +123,8 @@ assign switchControl3 = bioee_wirein_00[2];
 assign switchControl4 = bioee_wirein_00[3];
 
 wire dacSetTrigger;
-//wire dacEndTrigger;
 
 assign dacSetTrigger = bioee_triggerin_40[1];
-//assign dacEndTrigger = bioee_triggerin_40[2];
 
 wire dac1AckDataTrigger;
 wire dac1AckSetTrigger;
@@ -258,7 +256,10 @@ staticControlOKInterface switchInterface4 (
 			.set_trigger(controlUpdateTrigger)
 			);
 	
-assign dummyLogic = 4'b0000;
+assign dummyLogic[0] = adcDout;
+assign dummyLogic[1] = adcChipSelBar;
+assign dummyLogic[2] = 1'b0;
+assign dummyLogic[3] = 1'b0;
 
 //========================================================================
 // ADC
@@ -293,7 +294,7 @@ adcOKInterface adcController (
 BioEE_sdram_fifo sdramController(
 	.datain(adcOutputData),
 	.write_clk(adcOutputCLK),
-	.write_en(1'b1),
+	.write_en(adcOutputReady),
 	
 	.resetin(global_reset),
 	

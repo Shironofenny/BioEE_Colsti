@@ -23,5 +23,6 @@ if __name__ == "__main__":
 	# Otherwise core dump is likely to be raised
 	#time.sleep(0.1)
 
+	logFile.close()
 	sys.exit(result)
 

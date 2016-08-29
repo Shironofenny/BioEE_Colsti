@@ -24,7 +24,7 @@ DAC_MAX_CODE = 4095
 TRIGGER_BACK_CYCLE = 50
 
 # -------------------------------------------------------
-# Below are constant configurations for thread management
+# Below are the default voltages of the DAC's 
 # -------------------------------------------------------
 
 RE_DEFAULT_VOLTAGE = 1.25
@@ -38,6 +38,16 @@ ADCREF_DEFAULT_VOLTAGE = 3.3
 
 ADC_DATA_CHECK_INTERVAL = 0.001 # in seconds
 TRIGGER_OUT_CHECK_INTERVAL = 0.0005 # in seconds
+PLOT_REFRESHING_INTERVAL = 0.001 # in seconds
+MAIN_UPDATING_INTERVAL = 0.001 # in seconds
+
+# -------------------------------------------------------------
+# Below are the default data display and storage configurations
+# -------------------------------------------------------------
+
+NUM_DATA_DISPLAY = 1000
+DATA_DISP_DOWNSAMPLE = 400
+DATA_SAVE_DOWNSAMPLE = 200
 
 # -------------------------------------------------------
 # Below are constant configurations for costi_bitfile.bit
@@ -65,11 +75,15 @@ OK_BIT_SDRAM_READY = 0x0080
 
 OK_BIT_CTRL_UPDATE = 0x0000
 OK_BIT_DAC_SET = 0x0001
-OK_BIT_DAC_FINAL_ACK = 0x0002
 
 # Data for Control signals
 OK_DATA_RESET = 0x8000
 OK_DATA_IDLE = 0x0000
+
+OK_DATA_SWDEFAULT = 0x0003
+OK_DATA_SW = [0x0001, 0x0002, 0x0004, 0x0008]
+
+OK_DATA_ADCDEFAULT = 0x0000
 
 # Pipe out block size
 OK_PIPEOUT_BLOCKSIZE = 1024
