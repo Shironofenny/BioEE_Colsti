@@ -24,10 +24,6 @@ from DataAcquireThread import DataAcquireThread
 ui_path = utils.feFindDir('ui',4) + '/bioeecosti_ui.py'
 gui = imp.load_source('Ui_MainWindow', ui_path)
 
-# Finding the gui file (python version)
-pg_path = utils.feFindDir('lib',4) + '/pyqtgraph'
-pg = imp.load_source('pyqtgraph', pg_path)
-
 # Nickname for the singleton CostiFPGA
 fpga = CostiFPGA.Instance()
 log = LogManager.Instance()
