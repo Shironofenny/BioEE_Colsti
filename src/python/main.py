@@ -8,7 +8,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 import LogManager
 import Constants
-import LogFile 
+import LogFile
 
 if __name__ == "__main__":
 	logFile = LogFile.LogFile(Constants.LOG_FILE_NAME, 'w')
@@ -25,4 +25,3 @@ if __name__ == "__main__":
 
 	logFile.close()
 	sys.exit(result)
-

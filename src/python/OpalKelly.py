@@ -7,9 +7,9 @@ import FeUtils as utils
 
 source_path = utils.feFindDir('lib',3)
 if not source_path :
-		# Exit the program when no library could found
-		print('Library path not found, please check if library files exist')
-		sys.exit(1)
+    # Exit the program when no library could found
+    print('Library path not found, please check if library files exist')
+    sys.exit(1)
 
 source_path = source_path + '/ok/ok.py';
 
@@ -21,17 +21,17 @@ import Constants
 import LogManager
 
 class OpalKelly(object):
-	
+  
   def __init__(self):
-		self.xem = ok.okCFrontPanel()
-		self.pll = ok.PLL22393()
-		self.activationFlag = False
+    self.xem = ok.okCFrontPanel()
+    self.pll = ok.PLL22393()
+    self.activationFlag = False
 
   def openDevice(self):
-		errormsg = self.xem.OpenBySerial("")
-		if (self.xem.NoError == errormsg):
-				self.activationFlag = True
-		return errormsg
+    errormsg = self.xem.OpenBySerial("")
+    if (self.xem.NoError == errormsg):
+        self.activationFlag = True
+    return errormsg
 
   def configurePLL(self):
     if (self.activationFlag):

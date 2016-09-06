@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import os
@@ -23,6 +23,10 @@ from DataAcquireThread import DataAcquireThread
 # Finding the gui file (python version)
 ui_path = utils.feFindDir('ui',4) + '/bioeecosti_ui.py'
 gui = imp.load_source('Ui_MainWindow', ui_path)
+
+# Finding the gui file (python version)
+pg_path = utils.feFindDir('lib',4) + '/pyqtgraph'
+pg = imp.load_source('pyqtgraph', pg_path)
 
 # Nickname for the singleton CostiFPGA
 fpga = CostiFPGA.Instance()
@@ -94,9 +98,6 @@ class Costi(QtWidgets.QMainWindow):
   def configureDisplays(self):
     ''' Configure the options for displaying the data
     '''
-    self.ui.plot1.setMouseEnabled(x=True, y=False)
-    self.ui.plot2.setMouseEnabled(x=True, y=False)
-
     # Write default values to the voltage input line edits
     self.ui.leSetRE.setText(str(fpga.getREValue()))
     self.ui.leSetWE1.setText(str(fpga.getWE1Value()))
