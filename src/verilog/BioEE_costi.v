@@ -178,7 +178,7 @@ BioEE_clkdivider ledCLKDivider ( .clkin(CLK100M),
 wire adcCLK1M;
 
 BioEE_clkdivider adcCLKDivider ( .clkin(CLK100M), 
-											.integerdivider(32'd100), 
+											.integerdivider(32'd200), 
 											.enable(1'b1),
 											.clkout(adcCLK1M) );
 							
@@ -186,7 +186,7 @@ BioEE_clkdivider adcCLKDivider ( .clkin(CLK100M),
 wire dacCLK1M;
 
 BioEE_clkdivider dacCLKDivider ( .clkin(CLK100M), 
-											.integerdivider(32'd100), 
+											.integerdivider(32'd200), 
 											.enable(1'b1),
 											.clkout(dacCLK1M) );
 								
