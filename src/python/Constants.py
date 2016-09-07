@@ -24,7 +24,7 @@ DAC_MAX_CODE = 4095
 TRIGGER_BACK_CYCLE = 50
 
 # -------------------------------------------------------
-# Below are the default voltages of the DAC's 
+# Below are the default voltages of the DAC's
 # -------------------------------------------------------
 
 RE_DEFAULT_VOLTAGE = 1.25
