@@ -24,6 +24,18 @@ DAC_MAX_CODE = 4095
 TRIGGER_BACK_CYCLE = 50
 
 # -------------------------------------------------------
+# Below are the default configurations for the SWV run
+# -------------------------------------------------------
+
+SWV_DEFAULT_FREQ = 60 # in hertz
+SWV_DEFAULT_INCRE = 0.004 # in volt
+SWV_DEFAULT_AMP = 0.025 # in volt
+SWV_DEFAULT_STARTE = -1 # in volt
+SWV_DEFAULT_ENDE = 1 # in volt
+SWV_DEFAULT_INITWAIT = 2 # in seconds
+SWV_DEFAULT_WE = 1.25 # in volt
+
+# -------------------------------------------------------
 # Below are the default voltages of the DAC's
 # -------------------------------------------------------
 
@@ -39,14 +51,14 @@ ADCREF_DEFAULT_VOLTAGE = 3.3
 ADC_DATA_CHECK_INTERVAL = 0.001 # in seconds
 TRIGGER_OUT_CHECK_INTERVAL = 0.0005 # in seconds
 PLOT_REFRESHING_INTERVAL = 0.001 # in seconds
-MAIN_UPDATING_INTERVAL = 0.001 # in seconds
+MAIN_UPDATING_INTERVAL = 0.01 # in seconds
 
 # -------------------------------------------------------------
 # Below are the default data display and storage configurations
 # -------------------------------------------------------------
 
 NUM_DATA_DISPLAY = 1000
-DATA_DISP_DOWNSAMPLE = 400
+DATA_DISP_DOWNSAMPLE = 10
 DATA_SAVE_DOWNSAMPLE = 200
 
 # -------------------------------------------------------

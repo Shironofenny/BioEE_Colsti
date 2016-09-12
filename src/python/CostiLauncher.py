@@ -13,12 +13,11 @@ import pyqtgraph as pg
 from pyqtgraph import PlotWidget
 
 import FeUtils as utils
-import LogManager 
+import LogManager
 import Constants
 import CostiFPGA
 import PlotRefresher
-
-from DataAcquireThread import DataAcquireThread
+import SWVEngine
 
 # Finding the gui file (python version)
 ui_path = utils.feFindDir('ui',4) + '/bioeecosti_ui.py'
@@ -60,6 +59,8 @@ class Costi(QtWidgets.QMainWindow):
     self.plotRefresher = PlotRefresher.PlotRefresher()
     self.plotRefresher.startPlotRefresherThread()
 
+    self.swvEngine = SWVEngine.SWVEngine()
+
     self.linkGUI()
 
     # Timer instance to periodically run main thread.
@@ -84,7 +85,7 @@ class Costi(QtWidgets.QMainWindow):
     # Change options for pyqtgraph
     pg.setConfigOption('background',(239,235,231))
     pg.setConfigOption('foreground','k')
-    
+
   def linkGUI(self):
     ''' Linking GUI element's to their corresponding logic
     '''
@@ -112,12 +113,13 @@ class Costi(QtWidgets.QMainWindow):
       self.ui.pbSwEx1.setChecked(True)
     if fpga.getSwitchState(4) :
       self.ui.pbSwEx2.setChecked(True)
-    
+
   def bondButtons(self):
     ''' Bond all the buttons of the GUI to their corresponding logic
     '''
     self.ui.action_Load_FPGA.triggered.connect(self.loadBitFile)
     self.ui.action_Connect_FPGA.triggered.connect(self.connectCostiFPGA)
+    self.ui.actionSquare_wave_voltametry.triggered.connect(self.performSWV)
 
     self.ui.pbSetRE.clicked.connect(self.setREValue)
     self.ui.pbSetWE1.clicked.connect(self.setWE1Value)
@@ -143,7 +145,7 @@ class Costi(QtWidgets.QMainWindow):
       log.write("Loading bit file " + self.filename)
       fpga.loadFile(self.filename.encode('ascii', 'ignore'))
       fpga.setBitfileLoaded()
-      
+
       # Device should be configured correctly now, so reset is possible
       log.write("Resetting hardware ...")
       fpga.reset()
@@ -157,7 +159,7 @@ class Costi(QtWidgets.QMainWindow):
       # Automatic update DAC
       log.write("Loading DACs automatically...")
       fpga.updateDacs()
-      
+
       # Automatic start ADC reading stream thread
       fpga.configureADC()
       fpga.startADCDataStreamThread()
@@ -192,10 +194,13 @@ class Costi(QtWidgets.QMainWindow):
     else :
       log.write("The value for ADC Reference is not legit. Please double check...")
 
+  def performSWV(self):
+    self.swvEngine.startSWVEngineThread()
+
 # -----------------------------------------------------------
 # The following functions are used to start the auto-updating
 # functions in the main thread. It is written in a QTimer way
-# simply because QT doesn't allow multithread access to the 
+# simply because QT doesn't allow multithread access to the
 # GUI object.
 # -----------------------------------------------------------
 
@@ -209,7 +214,7 @@ class Costi(QtWidgets.QMainWindow):
 
   def mainThread(self):
     """ The main loop thread. It should not be running in a separate thread instance, but
-        natively inside this thread. Just call this function after all the configuration 
+        natively inside this thread. Just call this function after all the configuration
         is done in __init__
     """
     self.plotRefresher.updatePlots()

@@ -19,7 +19,7 @@ class PlotRefresher(object) :
     self.plot1Handle = None
     self.plot2Handle = None
     self.plot1Number = 0
-    self.plot2Number = 1
+    self.plot2Number = 2
     self.plot1YLim = [0,0]
     self.plot2YLim = [0,0]
 
@@ -92,41 +92,41 @@ class PlotRefresher(object) :
     if not self.channels[self.plot1Number].isEmpty():
       self.plot1Handle.clear()
       self.plot1Handle.plot(self.channels[self.plot1Number].getData())
-      self.plot1Handle.setXRange(0, 1000, padding=0)
+      self.plot1Handle.setXRange(0, Constants.NUM_DATA_DISPLAY, padding=0)
 
     if not self.channels[self.plot2Number].isEmpty():
       self.plot2Handle.clear()
       self.plot2Handle.plot(self.channels[self.plot2Number].getData())
-      self.plot2Handle.setXRange(0, 1000, padding=0.02)
+      self.plot2Handle.setXRange(0, Constants.NUM_DATA_DISPLAY, padding=0.02)
       self.plot2Handle.getAxis('bottom').setScale(0.2)
       self.plot2Handle.getAxis('bottom').setLabel('Time', units='s')
 
     self.channelLock.release()
 
 # ---------------------------------------------------------
-# The following functions are related to sorting incoming 
+# The following functions are related to sorting incoming
 # ADC data into different channels
 # ---------------------------------------------------------
 
   def plotRefresher(self):
     while not self.stopPlotRefresher.wait(Constants.PLOT_REFRESHING_INTERVAL):
+      self.channelLock.acquire()
       data = fpga.getDataQueueOut()
       if data != None :
         adcRange = fpga.getADCRefValue()
-        self.channelLock.acquire()
+
         for i in range(data.getSize()):
           point = data[i]
           addr = int(point / 4096)
           value = float(point % 4096) / Constants.DAC_MAX_CODE * adcRange
           if addr >= 8 :
             pass
-            log.write("Data received for address larger than 4'b0111. This is not handleded by current program")
           else :
             self.dispDownsampleCounter[addr] = self.dispDownsampleCounter[addr] + 1
             if self.dispDownsampleCounter[addr] == Constants.DATA_DISP_DOWNSAMPLE :
               self.dispDownsampleCounter[addr] = 0
               self.channels[addr].push(value)
-        self.channelLock.release()
+      self.channelLock.release()
 
   def startPlotRefresherThread(self):
     if not self.plotRefresherThread.isAlive():

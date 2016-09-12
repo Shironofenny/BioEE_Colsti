@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os
 
 from CostiLauncher import Costi
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -11,7 +12,9 @@ import Constants
 import LogFile
 
 if __name__ == "__main__":
-	logFile = LogFile.LogFile(Constants.LOG_FILE_NAME, 'w')
+	if os.path.isfile(Constants.LOG_FILE_NAME) :
+		os.remove(Constants.LOG_FILE_NAME)
+	logFile = LogFile.LogFile(Constants.LOG_FILE_NAME, 'a')
 	LogManager.Instance().addLogMethod(logFile.writeLog, 1)
 	app = QtWidgets.QApplication(sys.argv)
 	app.setStyle("fusion")
@@ -23,5 +26,5 @@ if __name__ == "__main__":
 	# Otherwise core dump is likely to be raised
 	#time.sleep(0.1)
 
-	logFile.close()
+	#logFile.close()
 	sys.exit(result)

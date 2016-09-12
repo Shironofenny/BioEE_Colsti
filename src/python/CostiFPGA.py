@@ -34,8 +34,8 @@ class CostiFPGA(OpalKelly.OpalKelly):
     super(CostiFPGA, self).__init__()
 
     self.bitfileLoaded = False
-    
-    # Main Rlock to avoid simultanious multiple access to the xem3010 
+
+    # Main Rlock to avoid simultanious multiple access to the xem3010
     self.xemlock = threading.RLock()
 
     # Default DAC output values
@@ -45,7 +45,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
     self.dac4Value = Constants.ADCREF_DEFAULT_VOLTAGE
 
     self.switchState = Constants.OK_DATA_SWDEFAULT
-  
+
     # ADC data stream thread control
     self.adcDataThread = threading.Thread(target = self.acquireADCDataStream)
     self.stopADCDataStream = threading.Event()
@@ -73,7 +73,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
 
   def isReady(self):
     return (self.isDeviceConnected() and self.isBitfileLoaded())
-  
+
   def reset(self):
     if not self.isReady() :
       log.write("No device with correct configuration is connected, abort resetting")
@@ -87,7 +87,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
     # Hardware de-reset
     self.setWireIn(Constants.OK_DATA_IDLE)
     self.updateWireIns()
-    
+
     # Clear all the events
     self.evDAC1AckSet.clear();
     self.evDAC1AckData.clear();
@@ -102,7 +102,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
   def setWE1Value(self, value):
     self.dac1Value = value
     self.updateDacs()
-  
+
   def setWE2Value(self, value):
     self.dac2Value = value
     self.updateDacs()
@@ -164,7 +164,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
     dac2Int = math.floor(self.dac2Value / Constants.AVDD * Constants.DAC_MAX_CODE)
     dac3Int = math.floor(self.dac3Value / Constants.AVDD * Constants.DAC_MAX_CODE)
     dac4Int = math.floor(self.dac4Value / Constants.AVDD * Constants.DAC_MAX_CODE)
-    
+
     # Initialize the byte transfer buffer
     dacDataBuffer = bytearray(6)
     dacDataBuffer[1] = int(dac1Int / 16)
@@ -175,7 +175,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
     dacDataBuffer[4] = int(dac4Int % 256)
 
     # Sending the buffer through pipe in
-    log.write("Sending DAC data, and waiting for hardware acknowledgement ...")
+    #log.write("Sending DAC data, and waiting for hardware acknowledgement ...")
     self.writeToPipeIn(Constants.OK_ADDR_PIPEIN_DAC, dacDataBuffer)
 
     # Waiting for acknowledgement
@@ -189,7 +189,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
         dac2ack = True
         self.evDAC2AckData.clear()
       if dac1ack and dac2ack:
-        log.write("Acknowledgement received from DACs after " + str(i) + " cycles, setting the output ...")
+        #log.write("Acknowledgement received from DACs after " + str(i) + " cycles, setting the output ...")
         break
       time.sleep(Constants.TRIGGER_OUT_CHECK_INTERVAL)
 
@@ -203,7 +203,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
       #return
 
     self.activateTriggerIn(Constants.OK_BIT_DAC_SET)
-    
+
     dac1ack = False
     dac2ack = False
     for i in range(Constants.TRIGGER_BACK_CYCLE):
@@ -214,8 +214,8 @@ class CostiFPGA(OpalKelly.OpalKelly):
         dac2ack = True
         self.evDAC2AckSet.clear()
       if dac1ack and dac2ack:
-        log.write("Acknowledgement received from DACs after " + str(i) + " cycles, values updated to the outputs: DAC1 = " + 
-            str(self.dac1Value) + " , DAC2 = " + str(self.dac2Value) + " , DAC3 = " + str(self.dac3Value) + " , DAC4 = " + str(self.dac4Value))
+        #log.write("Acknowledgement received from DACs after " + str(i) + " cycles, values updated to the outputs: DAC1 = " +
+        #    str(self.dac1Value) + " , DAC2 = " + str(self.dac2Value) + " , DAC3 = " + str(self.dac3Value) + " , DAC4 = " + str(self.dac4Value))
         break
       time.sleep(Constants.TRIGGER_OUT_CHECK_INTERVAL)
 
@@ -254,7 +254,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
       return self.dataOutQueue.get()
 
 # ---------------------------------------------------------
-# The following functions are related to reading ADC data 
+# The following functions are related to reading ADC data
 # from a separate thread
 # ---------------------------------------------------------
 
@@ -302,7 +302,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
     self.stopTriggerOutManager.set()
 
 # ---------------------------------------------------------
-# The following functions are related to reading ADC data 
+# The following functions are related to reading ADC data
 # from a separate thread
 # ---------------------------------------------------------
 
