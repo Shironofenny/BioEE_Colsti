@@ -271,7 +271,7 @@ staticControlOKInterface switchInterface4 (
 
 wire [11:0] test_wire;
 
-assign dummyLogic[0] = dacCLK;
+assign dummyLogic[0] = test_wire[0];
 assign dummyLogic[1] = dac2AckDataTrigger;
 assign dummyLogic[2] = dacDin[1];
 assign dummyLogic[3] = dacLoad[1];
@@ -380,7 +380,7 @@ dacSWVEngine dac2SWVModifier(
 						.dac_data( dac2SWVData ),
 						.dac_data_en( dacSWVEnable ),
 						.shield( dac2Shield ),
-						.adc_ref( test_wire[11:0] )
+						.enable( test_wire[0] )
 						);
 
 //========================================================================
@@ -390,11 +390,11 @@ dacSWVEngine dac2SWVModifier(
 wire [7:0] led_signals = {	ledCLK1Hz,
 									dac2Shield[0],
 									test_wire[0],
-									test_wire[1],
-									test_wire[2],
-									test_wire[3],
-									test_wire[4],
-									test_wire[5]};
+									1'b0,
+									1'b0,
+									1'b0,
+									1'b0,
+									1'b0};
 										
 OBUF OBUF_led[7:0] ( .I(~led_signals[7:0]), .O(led[7:0]) );
 

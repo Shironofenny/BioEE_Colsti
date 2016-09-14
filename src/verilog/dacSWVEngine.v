@@ -28,7 +28,7 @@ module dacSWVEngine(
     output [7:0] dac_data,
     output dac_data_en,
     output [7:0] shield,
-	 output [11:0] adc_ref
+	 output enable
     );
 
 reg [12*4-1 : 0] data_register;
@@ -46,8 +46,7 @@ reg disable_reg;
 reg [11:0] re_voltage_reg;
 reg dac_set_reg;
 
-//wire [11:0] 
-assign adc_ref = data_register[12*4-1 : 12*3];
+wire [11:0] adc_ref = data_register[12*4-1 : 12*3];
 wire [11:0] e_init = data_register[12*3-1 : 12*2];
 wire [11:0] e_raise = data_register[12*2-1 : 12*1];
 wire [11:0] e_fall = data_register[12*1-1 : 12*0];
@@ -59,7 +58,7 @@ wire [11:0] re_voltage = re_voltage_reg[11:0];
 
 wire init_block = waiting_data;
 wire disable_wire = disable_reg;
-wire enable = enable_reg & ( ~ disable_wire );
+assign enable = enable_reg & ( ~ disable_wire );
 
 assign shield [7:0] = shield_reg [7:0];
 assign dac_data [7:0] = dac_data_reg [7:0];
