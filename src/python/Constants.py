@@ -49,11 +49,11 @@ class Constants(object) :
     # Below are the default configurations for the SWV run
     # -------------------------------------------------------
 
-    SWV_DEFAULT_FREQ = 30 # in hertz
+    SWV_DEFAULT_FREQ = 15 # in hertz
     SWV_DEFAULT_INCRE = 0.004 # in volt
     SWV_DEFAULT_AMP = 0.025 # in volt
-    SWV_DEFAULT_STARTE = -0.2 # in volt
-    SWV_DEFAULT_ENDE = 0.2 # in volt
+    SWV_DEFAULT_STARTE = -0.5 # in volt
+    SWV_DEFAULT_ENDE = 0.5 # in volt
     SWV_DEFAULT_INITWAIT = 2 # in seconds
     SWV_DEFAULT_WE = 1.25 # in volt
 

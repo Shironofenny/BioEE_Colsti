@@ -28,7 +28,7 @@ module dacSWVEngine(
     output [7:0] dac_data,
     output dac_data_en,
     output [7:0] shield,
-	 output enable
+	 output disable_wire
     );
 
 reg [12*4-1 : 0] data_register;
@@ -57,8 +57,8 @@ wire [15:0] step_max = control_register[16*1-1 : 16*0];
 wire [11:0] re_voltage = re_voltage_reg[11:0];
 
 wire init_block = waiting_data;
-wire disable_wire = disable_reg;
-assign enable = enable_reg & ( ~ disable_wire );
+assign disable_wire = disable_reg;
+wire enable = enable_reg & ( ~ disable_wire );
 
 assign shield [7:0] = shield_reg [7:0];
 assign dac_data [7:0] = dac_data_reg [7:0];
@@ -112,27 +112,27 @@ always @ (negedge ti_clk or posedge rst) begin
 				case(swv_state)
 					// rise
 					2'd0 : begin
-						//if (step_counter == 16'd0) begin
+						if (step_counter == 16'd0) begin
 							re_voltage_reg <= e_init;
-						//end else begin
-						//	re_voltage_reg <= re_voltage_reg + e_raise;
-						//	swv_state <= 2'd1;
-						//end
+						end else begin
+							re_voltage_reg <= re_voltage_reg + e_raise;
+							swv_state <= 2'd1;
+						end
 					end
 					// fall
 					2'd1 : begin
-						re_voltage_reg <= re_voltage_reg + e_fall;
+						re_voltage_reg <= re_voltage_reg - e_fall;
 						swv_state <= 2'd0;
 					end
 				endcase
-			end else if (time_counter == time_max - 32'd7) begin
+			end else if (time_counter == time_max - 32'd1000) begin
 				dac_data_reg <= re_voltage[11:4];
 				dac_data_en_reg <= 1'b1;
-			end else if (time_counter == time_max - 32'd6) begin
+			end else if (time_counter == time_max - 32'd999) begin
 				dac_data_reg <= {re_voltage[3:0], adc_ref[11:8]};
-			end else if (time_counter == time_max - 32'd5) begin
+			end else if (time_counter == time_max - 32'd998) begin
 				dac_data_reg <= adc_ref[7:0];
-			end else if (time_counter == time_max - 32'd4) begin
+			end else if (time_counter == time_max - 32'd997) begin
 				dac_data_en_reg <= 1'b0;
 			end else if (time_counter == time_max - 32'd2) begin
 				dac_set_reg <= 1'b1;
@@ -143,6 +143,7 @@ always @ (negedge ti_clk or posedge rst) begin
 				if (step_counter == step_max ) begin
 					disable_reg <= 1'b1;
 					step_counter <= 16'd0;
+					swv_state <= 1'b0;
 				end
 			end
 		end else begin

@@ -276,6 +276,8 @@ assign dummyLogic[1] = dac2AckDataTrigger;
 assign dummyLogic[2] = dacDin[1];
 assign dummyLogic[3] = dacLoad[1];
 
+
+
 //========================================================================
 // ADC
 //  -- ADC module occupies 1 input port (pipein 80) and 1 output port
@@ -380,7 +382,7 @@ dacSWVEngine dac2SWVModifier(
 						.dac_data( dac2SWVData ),
 						.dac_data_en( dacSWVEnable ),
 						.shield( dac2Shield ),
-						.enable( test_wire[0] )
+						.disable_wire( test_wire[0] )
 						);
 
 //========================================================================
