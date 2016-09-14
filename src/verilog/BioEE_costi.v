@@ -57,7 +57,7 @@ wire [16:0] ok2;
 
 wire [15:0]	bioee_triggerin_40;
 wire [15:0]	bioee_triggerout_60;
-wire [15:0] bioee_wirein_00;
+wire [15:0] bioee_wirein_00, bioee_wirein_01;
 wire [15:0] bioee_wireout_20;
 wire [15:0] bioee_pipein_80, bioee_pipein_81;
 
@@ -86,6 +86,7 @@ okHostInterface okHI(
 		.ti_clk(ti_clk), .ok1(ok1), .ok2(ok2));
 
 okWireIn ep00 (.ok1(ok1), .ok2(ok2), .ep_addr(8'h00), .ep_dataout(bioee_wirein_00));
+okWireIn ep01 (.ok1(ok1), .ok2(ok2), .ep_addr(8'h01), .ep_dataout(bioee_wirein_01));
 
 okWireOut ep20 (.ok1(ok1), .ok2(ok2), .ep_addr(8'h20), .ep_datain(bioee_wireout_20));
 
@@ -122,9 +123,18 @@ assign switchControl2 = bioee_wirein_00[1];
 assign switchControl3 = bioee_wirein_00[2];
 assign switchControl4 = bioee_wirein_00[3];
 
-wire dacSetTrigger;
+wire [15:0] dacSWVData;
+assign dacSWVData[15:0] = bioee_wirein_01[15:0];
 
-assign dacSetTrigger = bioee_triggerin_40[1];
+wire dac1SetTrigger;
+wire dac2SetTrigger;
+wire dac2SWVSetTrigger;
+wire dataUpdateTrigger, swvStartTrigger;
+
+assign dac1SetTrigger = bioee_triggerin_40[1];
+assign dac2SetTrigger = bioee_triggerin_40[1] | dac2SWVSetTrigger;
+assign dataUpdateTrigger = bioee_triggerin_40[2];
+assign swvStartTrigger = bioee_triggerin_40[3];
 
 wire dac1AckDataTrigger;
 wire dac1AckSetTrigger;
@@ -143,12 +153,15 @@ assign bioee_triggerout_60[4] = adcFrequencyExceptionTrigger;
 
 assign bioee_triggerout_60[7] = adcFillLevelTrigger;
 
-wire       dacWriteEnable;
+wire       dac1WriteEnable, dac2WriteEnable;
+wire 		  dacSWVEnable;
 wire [7:0] dac1InputData, dac2InputData;
+wire [7:0] dac2Shield, dac2SWVData;
 
-assign dacWriteEnable      = bioee_pipein_write_81;
+assign dac1WriteEnable     = bioee_pipein_write_81;
+assign dac2WriteEnable		= (bioee_pipein_write_81 & (~dac2Shield[0])) | (dacSWVEnable & dac2Shield[0]);
 assign dac1InputData [7:0] = bioee_pipein_81 [15:8];
-assign dac2InputData [7:0] = bioee_pipein_81 [7:0];
+assign dac2InputData [7:0] = (bioee_pipein_81 [7:0] & (~dac2Shield)) | ( dac2SWVData & dac2Shield );
 
 //========================================================================
 // Clock generation
@@ -175,20 +188,20 @@ BioEE_clkdivider ledCLKDivider ( .clkin(CLK100M),
 											.clkout(ledCLK1Hz) );
 
 // ADC clock. This is the clock feed into ADC as SCLK
-wire adcCLK1M;
+wire adcCLK500K;
 
 BioEE_clkdivider adcCLKDivider ( .clkin(CLK100M), 
 											.integerdivider(32'd200), 
 											.enable(1'b1),
-											.clkout(adcCLK1M) );
+											.clkout(adcCLK500K) );
 							
 // DAC clock. This is the clock feed into DAC as CLK							
-wire dacCLK1M;
+wire dacCLK500K;
 
 BioEE_clkdivider dacCLKDivider ( .clkin(CLK100M), 
 											.integerdivider(32'd200), 
 											.enable(1'b1),
-											.clkout(dacCLK1M) );
+											.clkout(dacCLK500K) );
 								
 
 //========================================================================
@@ -255,7 +268,9 @@ staticControlOKInterface switchInterface4 (
 			.dout(switchSel[3]),
 			.set_trigger(controlUpdateTrigger)
 			);
-	
+
+wire [11:0] test_wire;
+
 assign dummyLogic[0] = adcDout;
 assign dummyLogic[1] = adcChipSelBar;
 assign dummyLogic[2] = 1'b0;
@@ -274,7 +289,7 @@ wire        adcOutputReady;
 adcOKInterface adcController (
 		.rst(global_reset),
 		.ti_clk(ti_clk), 
-		.sclk(adcCLK1M), 
+		.sclk(adcCLK500K), 
 		.din(bioee_pipein_80),
 		.dout(adcOutputData), 
 		.dout_clk(adcOutputCLK),
@@ -327,16 +342,15 @@ BioEE_sdram_fifo sdramController(
 //		 ADC) uses the rest of the 8 bits.
 //========================================================================
 
-assign dacCLK = dacCLK1M;
+assign dacCLK = dacCLK500K;
 
 dacOKInterface dac1Controller(
 						.rst( global_reset ), 
 						.ti_clk( ti_clk ), 
 						.clk( dacCLK ), 
-						.din_en( dacWriteEnable ), 
+						.din_en( dac1WriteEnable ), 
 						.din( dac1InputData [7:0] ), 
-						.set_trig( dacSetTrigger ), 
-						//.ack_end( dacEndTrigger ),
+						.set_trig( dac1SetTrigger ), 
 						.ack_data( dac1AckDataTrigger ), 
 						.ack_set( dac1AckSetTrigger ), 
 						.dac_din( dacDin[0] ), 
@@ -347,14 +361,26 @@ dacOKInterface dac2Controller(
 						.rst( global_reset ), 
 						.ti_clk( ti_clk ), 
 						.clk( dacCLK ), 
-						.din_en( dacWriteEnable ), 
+						.din_en( dac2WriteEnable ), 
 						.din( dac2InputData [7:0] ), 
-						.set_trig( dacSetTrigger ),
-						//.ack_end( dacEndTrigger ),						
+						.set_trig( dac2SetTrigger ),
 						.ack_data( dac2AckDataTrigger ), 
 						.ack_set( dac2AckSetTrigger ), 
 						.dac_din( dacDin[1] ), 
 						.dac_cs( dacLoad[1] )
+						);
+
+dacSWVEngine dac2SWVModifier(
+						.rst( global_reset ),
+						.data_in( dacSWVData[15:0] ),
+						.data_update_trig( dataUpdateTrigger ),
+						.ti_clk( ti_clk ),
+						.start_trig( swvStartTrigger ),
+						.dac_set( dac2SWVSetTrigger ),
+						.dac_data( dac2SWVData ),
+						.dac_data_en( dacSWVEnable ),
+						.shield( dac2Shield ),
+						.adc_ref( test_wire[11:0] )
 						);
 
 //========================================================================
@@ -362,13 +388,13 @@ dacOKInterface dac2Controller(
 //========================================================================
 
 wire [7:0] led_signals = {	ledCLK1Hz,
-									1'b0,
-									1'b0,
-									1'b0,
-									1'b0,
-									1'b0,
-									1'b0,
-									1'b0};
+									dac2Shield[0],
+									test_wire[0],
+									test_wire[1],
+									test_wire[2],
+									test_wire[3],
+									test_wire[4],
+									test_wire[5]};
 										
 OBUF OBUF_led[7:0] ( .I(~led_signals[7:0]), .O(led[7:0]) );
 

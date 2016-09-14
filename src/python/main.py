@@ -11,10 +11,12 @@ import LogManager
 import Constants
 import LogFile
 
+constants = Constants.Instance()
+
 if __name__ == "__main__":
-	if os.path.isfile(Constants.LOG_FILE_NAME) :
-		os.remove(Constants.LOG_FILE_NAME)
-	logFile = LogFile.LogFile(Constants.LOG_FILE_NAME, 'a')
+	if os.path.isfile(constants.LOG_FILE_NAME) :
+		os.remove(constants.LOG_FILE_NAME)
+	logFile = LogFile.LogFile(constants.LOG_FILE_NAME, 'a')
 	LogManager.Instance().addLogMethod(logFile.writeLog, 1)
 	app = QtWidgets.QApplication(sys.argv)
 	app.setStyle("fusion")

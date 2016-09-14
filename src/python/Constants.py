@@ -3,100 +3,125 @@
 
 # This file is for the storage of constants
 
-# This part is for constants related to Opal Kelly
+import threading
 
 from OKByte import OKByte16
 
-# -------------------------------------------------------------------
-# Below are constant configurations for genenral software requirement
-# -------------------------------------------------------------------
+instanceLock = threading.RLock()
 
-# The name of the logfile
-LOG_FILE_NAME = 'costi_runtime.log'
+_instance = None
 
-# The AVDD voltage of the analog domain
-AVDD = 3.3 # in volts
+def Instance():
+  instanceLock.acquire()
+  global _instance
+  if _instance is None:
+    _instance = Constants();
+  instanceLock.release()
+  return _instance
 
-# The number of total codes that DAC supports (2^bits)
-DAC_MAX_CODE = 4095
+class Constants(object) :
+    # -------------------------------------------------------------------
+    # Below are constant configurations for genenral software requirement
+    # -------------------------------------------------------------------
 
-# Maximum waiting cycles for trigger outs
-TRIGGER_BACK_CYCLE = 50
+    # The name of the logfile
+    LOG_FILE_NAME = 'costi_runtime.log'
 
-# -------------------------------------------------------
-# Below are the default configurations for the SWV run
-# -------------------------------------------------------
+    # The AVDD voltage of the analog domain
+    AVDD = 3.3 # in volts
 
-SWV_DEFAULT_FREQ = 60 # in hertz
-SWV_DEFAULT_INCRE = 0.004 # in volt
-SWV_DEFAULT_AMP = 0.025 # in volt
-SWV_DEFAULT_STARTE = -1 # in volt
-SWV_DEFAULT_ENDE = 1 # in volt
-SWV_DEFAULT_INITWAIT = 2 # in seconds
-SWV_DEFAULT_WE = 1.25 # in volt
+    # The number of total codes that DAC supports (2^bits)
+    DAC_MAX_CODE = 4095
 
-# -------------------------------------------------------
-# Below are the default voltages of the DAC's
-# -------------------------------------------------------
+    # The frequency of the ADC clock
+    ADC_CLK_FREQ = 500000;
 
-RE_DEFAULT_VOLTAGE = 1.25
-WE1_DEFAULT_VOLTAGE = 1.25
-WE2_DEFAULT_VOLTAGE = 1.25
-ADCREF_DEFAULT_VOLTAGE = 3.3
+    # The frequency of the DAC clock
+    DAC_CLK_FREQ = 500000;
 
-# -------------------------------------------------------
-# Below are constant configurations for thread management
-# -------------------------------------------------------
+    # The frequency of the OK clock
+    OK_CLK_FREQ = 48000000;
 
-ADC_DATA_CHECK_INTERVAL = 0.001 # in seconds
-TRIGGER_OUT_CHECK_INTERVAL = 0.0005 # in seconds
-PLOT_REFRESHING_INTERVAL = 0.001 # in seconds
-MAIN_UPDATING_INTERVAL = 0.01 # in seconds
+    # Maximum waiting cycles for trigger outs
+    TRIGGER_BACK_CYCLE = 1000
 
-# -------------------------------------------------------------
-# Below are the default data display and storage configurations
-# -------------------------------------------------------------
+    # -------------------------------------------------------
+    # Below are the default configurations for the SWV run
+    # -------------------------------------------------------
 
-NUM_DATA_DISPLAY = 1000
-DATA_DISP_DOWNSAMPLE = 10
-DATA_SAVE_DOWNSAMPLE = 200
+    SWV_DEFAULT_FREQ = 30 # in hertz
+    SWV_DEFAULT_INCRE = 0.004 # in volt
+    SWV_DEFAULT_AMP = 0.025 # in volt
+    SWV_DEFAULT_STARTE = -0.2 # in volt
+    SWV_DEFAULT_ENDE = 0.2 # in volt
+    SWV_DEFAULT_INITWAIT = 2 # in seconds
+    SWV_DEFAULT_WE = 1.25 # in volt
 
-# -------------------------------------------------------
-# Below are constant configurations for costi_bitfile.bit
-# -------------------------------------------------------
+    # -------------------------------------------------------
+    # Below are the default voltages of the DAC's
+    # -------------------------------------------------------
 
-# Address for communication using opal kelly
-OK_ADDR_CONTROL = 0x00
+    RE_DEFAULT_VOLTAGE = 1.25
+    WE1_DEFAULT_VOLTAGE = 1.25
+    WE2_DEFAULT_VOLTAGE = 1.25
+    ADCREF_DEFAULT_VOLTAGE = 3.3
 
-OK_ADDR_WIREOUT = 0x20
+    # -------------------------------------------------------
+    # Below are constant configurations for thread management
+    # -------------------------------------------------------
 
-OK_ADDR_TRIGIN = 0x40
-OK_ADDR_TRIGOUT = 0x60
+    ADC_DATA_CHECK_INTERVAL = 0.001 # in seconds
+    TRIGGER_OUT_CHECK_INTERVAL = 0.0005 # in seconds
+    PLOT_REFRESHING_INTERVAL = 0.001 # in seconds
+    MAIN_UPDATING_INTERVAL = 0.001 # in seconds
 
-OK_ADDR_PIPEIN_ADC = 0x80
-OK_ADDR_PIPEIN_DAC = 0x81
-OK_ADDR_PIPEOUT = 0xA0
+    # -------------------------------------------------------------
+    # Below are the default data display and storage configurations
+    # -------------------------------------------------------------
 
-# Bit masks for triggers
-OK_BIT_DAC1_ACK_DATA = 0x0001
-OK_BIT_DAC1_ACK_SET = 0x0002
-OK_BIT_DAC2_ACK_DATA = 0x0004
-OK_BIT_DAC2_ACK_SET = 0x0008
-OK_BIT_ADC_FREQ_EX = 0x0010
-OK_BIT_SDRAM_READY = 0x0080
+    NUM_DATA_DISPLAY = 1000
+    DATA_DISP_DOWNSAMPLE = 10
+    DATA_SAVE_DOWNSAMPLE = 200
 
-OK_BIT_CTRL_UPDATE = 0x0000
-OK_BIT_DAC_SET = 0x0001
+    # -------------------------------------------------------
+    # Below are constant configurations for costi_bitfile.bit
+    # -------------------------------------------------------
 
-# Data for Control signals
-OK_DATA_RESET = 0x8000
-OK_DATA_IDLE = 0x0000
+    # Address for communication using opal kelly
+    OK_ADDR_CONTROL = 0x00
+    OK_ADDR_SWV = 0x01
 
-OK_DATA_SWDEFAULT = 0x0003
-OK_DATA_SW = [0x0001, 0x0002, 0x0004, 0x0008]
+    OK_ADDR_WIREOUT = 0x20
 
-OK_DATA_ADCDEFAULT = 0x0000
+    OK_ADDR_TRIGIN = 0x40
+    OK_ADDR_TRIGOUT = 0x60
 
-# Pipe out block size
-OK_PIPEOUT_BLOCKSIZE = 1024
-OK_PIPEOUT_TRANSFERSIZE = 1 * OK_PIPEOUT_BLOCKSIZE
+    OK_ADDR_PIPEIN_ADC = 0x80
+    OK_ADDR_PIPEIN_DAC = 0x81
+    OK_ADDR_PIPEOUT = 0xA0
+
+    # Bit masks for triggers
+    OK_BIT_DAC1_ACK_DATA = 0x0001
+    OK_BIT_DAC1_ACK_SET = 0x0002
+    OK_BIT_DAC2_ACK_DATA = 0x0004
+    OK_BIT_DAC2_ACK_SET = 0x0008
+    OK_BIT_ADC_FREQ_EX = 0x0010
+    OK_BIT_SDRAM_READY = 0x0080
+
+    OK_BIT_CTRL_UPDATE = 0x0000
+    OK_BIT_DAC_SET = 0x0001
+    OK_BIT_SWV_UPDATE = 0x0002
+    OK_BIT_SWV_START = 0x0003
+
+    # Data for Control signals
+    OK_DATA_RESET = 0x8000
+    OK_DATA_IDLE = 0x0000
+
+    OK_DATA_SWDEFAULT = 0x0003
+    OK_DATA_SW = [0x0001, 0x0002, 0x0004, 0x0008]
+
+    OK_DATA_ADCDEFAULT = 0x0000
+
+    # Pipe out block size
+    OK_PIPEOUT_BLOCKSIZE = 1024
+    OK_PIPEOUT_TRANSFERSIZE = 1 * OK_PIPEOUT_BLOCKSIZE

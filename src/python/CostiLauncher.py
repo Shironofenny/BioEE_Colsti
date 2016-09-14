@@ -26,6 +26,7 @@ gui = imp.load_source('Ui_MainWindow', ui_path)
 # Nickname for the singleton CostiFPGA
 fpga = CostiFPGA.Instance()
 log = LogManager.Instance()
+constants = Constants.Instance()
 
 class Costi(QtWidgets.QMainWindow):
 
@@ -135,11 +136,16 @@ class Costi(QtWidgets.QMainWindow):
     ''' Load the corresponding bit file to the device (FPGA, Opal Kelly 3010),
         by open a new dialog to find the bit file needed to be read into the GUI
     '''
-    fileFinder = QtGui.QFileDialog(self)
-    filename = fileFinder.getOpenFileName()
-    self.filename = filename[0]
-    if (self.filename[-3:] != 'bit'):
-      log.write("WARNING: This is probably not a proper bit file for FPGA configuration")
+    if os.path.isfile("src/verilog/costi_bitfile.bit") :
+        self.filename = "src/verilog/costi_bitfile.bit"
+    elif os.path.isfile("../verilog/costi_bitfile.bit") :
+        self.filename = "../verilog/costi_bitfile.bit"
+    else :
+        fileFinder = QtGui.QFileDialog(self)
+        filename = fileFinder.getOpenFileName()
+        self.filename = filename[0]    
+        if (self.filename[-3:] != 'bit'):
+          log.write("WARNING: This is probably not a proper bit file for FPGA configuration")
 
     if fpga.isDeviceConnected() :
       log.write("Loading bit file " + self.filename)
@@ -195,7 +201,7 @@ class Costi(QtWidgets.QMainWindow):
       log.write("The value for ADC Reference is not legit. Please double check...")
 
   def performSWV(self):
-    self.swvEngine.startSWVEngineThread()
+    self.swvEngine.initSWV()
 
 # -----------------------------------------------------------
 # The following functions are used to start the auto-updating
@@ -208,7 +214,7 @@ class Costi(QtWidgets.QMainWindow):
     if self.mainThreadTimer.isActive():
       self.mainThreadTimer.stop()
     self.mainThreadTimer.timeout.connect(self.mainThread)
-    self.mainThreadTimer.setInterval(Constants.MAIN_UPDATING_INTERVAL)
+    self.mainThreadTimer.setInterval(constants.MAIN_UPDATING_INTERVAL)
     self.mainThreadTimer.setSingleShot(False)
     self.mainThreadTimer.start()
 

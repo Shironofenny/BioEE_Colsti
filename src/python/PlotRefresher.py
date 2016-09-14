@@ -12,6 +12,7 @@ from ListQueue import ListQueue
 # Nickname for the singleton CostiFPGA
 fpga = CostiFPGA.Instance()
 log = LogManager.Instance()
+constants = Constants.Instance()
 
 class PlotRefresher(object) :
 
@@ -30,7 +31,7 @@ class PlotRefresher(object) :
     # Initialize a maximum of 8 channel's data
     self.channels = [None] * 8
     for i in range(8):
-      self.channels[i] = ListQueue(Constants.NUM_DATA_DISPLAY)
+      self.channels[i] = ListQueue(constants.NUM_DATA_DISPLAY)
 
     self.channelLock = threading.RLock()
 
@@ -92,12 +93,12 @@ class PlotRefresher(object) :
     if not self.channels[self.plot1Number].isEmpty():
       self.plot1Handle.clear()
       self.plot1Handle.plot(self.channels[self.plot1Number].getData())
-      self.plot1Handle.setXRange(0, Constants.NUM_DATA_DISPLAY, padding=0)
+      self.plot1Handle.setXRange(0, constants.NUM_DATA_DISPLAY, padding=0)
 
     if not self.channels[self.plot2Number].isEmpty():
       self.plot2Handle.clear()
       self.plot2Handle.plot(self.channels[self.plot2Number].getData())
-      self.plot2Handle.setXRange(0, Constants.NUM_DATA_DISPLAY, padding=0.02)
+      self.plot2Handle.setXRange(0, constants.NUM_DATA_DISPLAY, padding=0.02)
       self.plot2Handle.getAxis('bottom').setScale(0.2)
       self.plot2Handle.getAxis('bottom').setLabel('Time', units='s')
 
@@ -109,7 +110,7 @@ class PlotRefresher(object) :
 # ---------------------------------------------------------
 
   def plotRefresher(self):
-    while not self.stopPlotRefresher.wait(Constants.PLOT_REFRESHING_INTERVAL):
+    while not self.stopPlotRefresher.wait(constants.PLOT_REFRESHING_INTERVAL):
       self.channelLock.acquire()
       data = fpga.getDataQueueOut()
       if data != None :
@@ -118,12 +119,12 @@ class PlotRefresher(object) :
         for i in range(data.getSize()):
           point = data[i]
           addr = int(point / 4096)
-          value = float(point % 4096) / Constants.DAC_MAX_CODE * adcRange
+          value = float(point % 4096) / constants.DAC_MAX_CODE * adcRange
           if addr >= 8 :
             pass
           else :
             self.dispDownsampleCounter[addr] = self.dispDownsampleCounter[addr] + 1
-            if self.dispDownsampleCounter[addr] == Constants.DATA_DISP_DOWNSAMPLE :
+            if self.dispDownsampleCounter[addr] == constants.DATA_DISP_DOWNSAMPLE :
               self.dispDownsampleCounter[addr] = 0
               self.channels[addr].push(value)
       self.channelLock.release()

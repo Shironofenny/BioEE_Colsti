@@ -15,17 +15,22 @@ from OKByte import OKByte16
 
 # Alias to singletons
 log = LogManager.Instance()
+constants = Constants.Instance()
 
 # Few lines to make it a (dirty, non-protected) singleton
 # If you want to use LogManager in a singleton way, then the correct call would be:
 # CostiFPGA.Instance().methodToCall(args)
 
+instanceLock = threading.RLock()
+
 _instance = None
 
 def Instance():
+  instanceLock.acquire()
   global _instance
   if _instance is None:
     _instance = CostiFPGA();
+  instanceLock.release()
   return _instance
 
 class CostiFPGA(OpalKelly.OpalKelly):
@@ -37,14 +42,15 @@ class CostiFPGA(OpalKelly.OpalKelly):
 
     # Main Rlock to avoid simultanious multiple access to the xem3010
     self.xemlock = threading.RLock()
+    self.datalock = threading.RLock()
 
     # Default DAC output values
-    self.dac1Value = Constants.WE1_DEFAULT_VOLTAGE
-    self.dac2Value = Constants.WE2_DEFAULT_VOLTAGE
-    self.dac3Value = Constants.RE_DEFAULT_VOLTAGE
-    self.dac4Value = Constants.ADCREF_DEFAULT_VOLTAGE
+    self.dac1Value = constants.WE1_DEFAULT_VOLTAGE
+    self.dac2Value = constants.WE2_DEFAULT_VOLTAGE
+    self.dac3Value = constants.RE_DEFAULT_VOLTAGE
+    self.dac4Value = constants.ADCREF_DEFAULT_VOLTAGE
 
-    self.switchState = Constants.OK_DATA_SWDEFAULT
+    self.switchState = constants.OK_DATA_SWDEFAULT
 
     # ADC data stream thread control
     self.adcDataThread = threading.Thread(target = self.acquireADCDataStream)
@@ -66,7 +72,9 @@ class CostiFPGA(OpalKelly.OpalKelly):
     self.dataOutQueue = Queue()
 
   def setBitfileLoaded(self):
+    self.datalock.acquire()
     self.bitfileLoaded = True
+    self.datalock.release()
 
   def isBitfileLoaded(self):
     return self.bitfileLoaded
@@ -80,12 +88,12 @@ class CostiFPGA(OpalKelly.OpalKelly):
       return
 
     # Hardware reset
-    self.setWireIn(Constants.OK_DATA_RESET)
+    self.setWireIn(constants.OK_DATA_RESET)
     self.updateWireIns()
     time.sleep(0.1)
 
     # Hardware de-reset
-    self.setWireIn(Constants.OK_DATA_IDLE)
+    self.setWireIn(constants.OK_DATA_IDLE)
     self.updateWireIns()
 
     # Clear all the events
@@ -99,21 +107,29 @@ class CostiFPGA(OpalKelly.OpalKelly):
   # -------------------------------------------
   # Getters / Setters for different DAC outputs
   # -------------------------------------------
-  def setWE1Value(self, value):
+  def setWE1Value(self, value, update=True):
+    self.datalock.acquire()
     self.dac1Value = value
-    self.updateDacs()
+    if update : self.updateDacs()
+    self.datalock.release()
 
-  def setWE2Value(self, value):
+  def setWE2Value(self, value, update=True):
+    self.datalock.acquire()
     self.dac2Value = value
-    self.updateDacs()
+    if update : self.updateDacs()
+    self.datalock.release()
 
-  def setREValue(self, value):
+  def setREValue(self, value, update=True):
+    self.datalock.acquire()
     self.dac3Value = value
-    self.updateDacs()
+    if update : self.updateDacs()
+    self.datalock.release()
 
-  def setADCRefValue(self, value):
+  def setADCRefValue(self, value, update=True):
+    self.datalock.acquire()
     self.dac4Value = value
-    self.updateDacs()
+    if update : self.updateDacs()
+    self.datalock.release()
 
   def getADCRefValue(self):
     return self.dac4Value
@@ -128,42 +144,43 @@ class CostiFPGA(OpalKelly.OpalKelly):
     return self.dac3Value
 
   def flipSwitch1(self):
-    self.switchState = self.switchState ^ Constants.OK_DATA_SW[0]
+    self.switchState = self.switchState ^ constants.OK_DATA_SW[0]
     self.updateSwitches()
 
   def flipSwitch2(self):
-    self.switchState = self.switchState ^ Constants.OK_DATA_SW[1]
+    self.switchState = self.switchState ^ constants.OK_DATA_SW[1]
     self.updateSwitches()
 
   def flipSwitch3(self):
-    self.switchState = self.switchState ^ Constants.OK_DATA_SW[2]
+    self.switchState = self.switchState ^ constants.OK_DATA_SW[2]
     self.updateSwitches()
 
   def flipSwitch4(self):
-    self.switchState = self.switchState ^ Constants.OK_DATA_SW[3]
+    self.switchState = self.switchState ^ constants.OK_DATA_SW[3]
     self.updateSwitches()
 
   def getSwitchState(self, i):
     # Simple robustness test
     if i < 1 or i > 4 :
       return False
-    state = self.switchState & Constants.OK_DATA_SW[i-1]
+    state = self.switchState & constants.OK_DATA_SW[i-1]
     return state != 0x0000
 
   def updateSwitches(self):
     self.setWireIn(self.switchState)
     self.updateWireIns()
-    self.activateTriggerIn(Constants.OK_BIT_CTRL_UPDATE)
+    self.activateTriggerIn(constants.OK_BIT_CTRL_UPDATE)
 
   def updateDacs(self):
+    self.datalock.acquire()
     if not self.isReady() :
       log.write("No device with correct configuration is connected, abort updating the DAC values")
       return
 
-    dac1Int = math.floor(self.dac1Value / Constants.AVDD * Constants.DAC_MAX_CODE)
-    dac2Int = math.floor(self.dac2Value / Constants.AVDD * Constants.DAC_MAX_CODE)
-    dac3Int = math.floor(self.dac3Value / Constants.AVDD * Constants.DAC_MAX_CODE)
-    dac4Int = math.floor(self.dac4Value / Constants.AVDD * Constants.DAC_MAX_CODE)
+    dac1Int = math.floor(self.dac1Value / constants.AVDD * constants.DAC_MAX_CODE)
+    dac2Int = math.floor(self.dac2Value / constants.AVDD * constants.DAC_MAX_CODE)
+    dac3Int = math.floor(self.dac3Value / constants.AVDD * constants.DAC_MAX_CODE)
+    dac4Int = math.floor(self.dac4Value / constants.AVDD * constants.DAC_MAX_CODE)
 
     # Initialize the byte transfer buffer
     dacDataBuffer = bytearray(6)
@@ -176,12 +193,12 @@ class CostiFPGA(OpalKelly.OpalKelly):
 
     # Sending the buffer through pipe in
     #log.write("Sending DAC data, and waiting for hardware acknowledgement ...")
-    self.writeToPipeIn(Constants.OK_ADDR_PIPEIN_DAC, dacDataBuffer)
+    self.writeToPipeIn(constants.OK_ADDR_PIPEIN_DAC, dacDataBuffer)
 
     # Waiting for acknowledgement
     dac1ack = False
     dac2ack = False
-    for i in range(Constants.TRIGGER_BACK_CYCLE):
+    for i in range(constants.TRIGGER_BACK_CYCLE):
       if self.evDAC1AckData.isSet() :
         dac1ack = True
         self.evDAC1AckData.clear()
@@ -191,7 +208,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
       if dac1ack and dac2ack:
         #log.write("Acknowledgement received from DACs after " + str(i) + " cycles, setting the output ...")
         break
-      time.sleep(Constants.TRIGGER_OUT_CHECK_INTERVAL)
+      time.sleep(constants.TRIGGER_OUT_CHECK_INTERVAL)
 
     if ( not dac1ack ) or ( not dac2ack ):
       if dac1ack:
@@ -200,13 +217,12 @@ class CostiFPGA(OpalKelly.OpalKelly):
         log.write("Failed to receive acknowledgement from DAC1, write action aborted.")
       else :
         log.write("Failed to receive acknowledgement from both DACs, write action aborted.")
-      #return
 
-    self.activateTriggerIn(Constants.OK_BIT_DAC_SET)
+    self.activateTriggerIn(constants.OK_BIT_DAC_SET)
 
     dac1ack = False
     dac2ack = False
-    for i in range(Constants.TRIGGER_BACK_CYCLE):
+    for i in range(constants.TRIGGER_BACK_CYCLE):
       if self.evDAC1AckSet.isSet() :
         dac1ack = True
         self.evDAC1AckSet.clear()
@@ -217,7 +233,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
         #log.write("Acknowledgement received from DACs after " + str(i) + " cycles, values updated to the outputs: DAC1 = " +
         #    str(self.dac1Value) + " , DAC2 = " + str(self.dac2Value) + " , DAC3 = " + str(self.dac3Value) + " , DAC4 = " + str(self.dac4Value))
         break
-      time.sleep(Constants.TRIGGER_OUT_CHECK_INTERVAL)
+      time.sleep(constants.TRIGGER_OUT_CHECK_INTERVAL)
 
     if ( not dac1ack ) or ( not dac2ack ):
       if dac1ack:
@@ -226,7 +242,8 @@ class CostiFPGA(OpalKelly.OpalKelly):
         log.write("Failed to receive acknowledgement from DAC1, set action aborted.")
       else :
         log.write("Failed to receive acknowledgement from both DACs, set action aborted.")
-      #return
+
+    self.datalock.release()
 
   def configureADC(self):
     if not self.isReady() :
@@ -236,15 +253,15 @@ class CostiFPGA(OpalKelly.OpalKelly):
     dacBuf = OKByte16(2)
     dacBuf[0] = 0xFF04
     dacBuf[1] = 0x0000
-    self.writeToPipeIn(Constants.OK_ADDR_PIPEIN_ADC, dacBuf.toByteArray())
+    self.writeToPipeIn(constants.OK_ADDR_PIPEIN_ADC, dacBuf.toByteArray())
 
   def getADCData(self):
     if not self.isReady() :
       log.write("No device with correct configuration is connected, abort getting Data from ADC")
       return
 
-    adcBuf = OKByte16(Constants.OK_PIPEOUT_TRANSFERSIZE)
-    self.readFromBlockPipeOut(Constants.OK_ADDR_PIPEOUT, Constants.OK_PIPEOUT_BLOCKSIZE, adcBuf.toByteArray())
+    adcBuf = OKByte16(constants.OK_PIPEOUT_TRANSFERSIZE)
+    self.readFromBlockPipeOut(constants.OK_ADDR_PIPEOUT, constants.OK_PIPEOUT_BLOCKSIZE, adcBuf.toByteArray())
     return adcBuf
 
   def getDataQueueOut(self):
@@ -266,20 +283,20 @@ class CostiFPGA(OpalKelly.OpalKelly):
 
         This thread also take care of exception trigger outs from FPGA
     """
-    while not self.stopTriggerOutManager.wait(Constants.TRIGGER_OUT_CHECK_INTERVAL):
+    while not self.stopTriggerOutManager.wait(constants.TRIGGER_OUT_CHECK_INTERVAL):
       # Update all trigger outs
       self.updateTriggerOuts()
-      if self.isTriggered(Constants.OK_BIT_DAC1_ACK_SET):
+      if self.isTriggered(constants.OK_BIT_DAC1_ACK_SET):
         self.evDAC1AckSet.set()
-      if self.isTriggered(Constants.OK_BIT_DAC1_ACK_DATA):
+      if self.isTriggered(constants.OK_BIT_DAC1_ACK_DATA):
         self.evDAC1AckData.set()
-      if self.isTriggered(Constants.OK_BIT_DAC2_ACK_SET):
+      if self.isTriggered(constants.OK_BIT_DAC2_ACK_SET):
         self.evDAC2AckSet.set()
-      if self.isTriggered(Constants.OK_BIT_DAC2_ACK_DATA):
+      if self.isTriggered(constants.OK_BIT_DAC2_ACK_DATA):
         self.evDAC2AckData.set()
-      if self.isTriggered(Constants.OK_BIT_SDRAM_READY):
+      if self.isTriggered(constants.OK_BIT_SDRAM_READY):
         self.evSDRAMReady.set()
-      if self.isTriggered(Constants.OK_BIT_ADC_FREQ_EX):
+      if self.isTriggered(constants.OK_BIT_ADC_FREQ_EX):
         self.evADCFreqEx.set()
 
       # Handle exception triggers
@@ -309,7 +326,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
   def acquireADCDataStream(self):
     """ Get ADC data from SDRAM periodically
     """
-    while not self.stopADCDataStream.wait(Constants.ADC_DATA_CHECK_INTERVAL):
+    while not self.stopADCDataStream.wait(constants.ADC_DATA_CHECK_INTERVAL):
       if self.evSDRAMReady.isSet() :
         data = self.getADCData()
         self.evSDRAMReady.clear()
@@ -343,9 +360,25 @@ class CostiFPGA(OpalKelly.OpalKelly):
     """
     self.xemlock.acquire()
     try :
-      self.xem.SetWireInValue(Constants.OK_ADDR_CONTROL, data)
+      self.xem.SetWireInValue(constants.OK_ADDR_CONTROL, data)
     except :
       log.write("FPGA unable to write wire inputs, perhaps a multi-thread writing conflict")
+    finally :
+      self.xemlock.release()
+
+  def setSWVValue(self, data):
+    """ Thread save version of setWireIn
+    """
+    self.xemlock.acquire()
+#    try :
+    self.xem.SetWireInValue(constants.OK_ADDR_SWV, data)
+    self.xem.UpdateWireIns()
+#    except :
+    #log.write("FPGA unable to write wire inputs, perhaps a multi-thread writing conflict")
+    try :
+      self.xem.ActivateTriggerIn(constants.OK_ADDR_TRIGIN, constants.OK_BIT_SWV_UPDATE)
+    except :
+      log.write("FPGA unable to activate trigger in, perhaps a multi-thread writing conflict")
     finally :
       self.xemlock.release()
 
@@ -365,7 +398,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
     """
     self.xemlock.acquire()
     try :
-      self.xem.ActivateTriggerIn(Constants.OK_ADDR_TRIGIN, bit)
+      self.xem.ActivateTriggerIn(constants.OK_ADDR_TRIGIN, bit)
     except :
       log.write("FPGA unable to activate trigger in, perhaps a multi-thread writing conflict")
     finally :
@@ -387,7 +420,7 @@ class CostiFPGA(OpalKelly.OpalKelly):
     """
     self.xemlock.acquire()
     try :
-      result = self.xem.IsTriggered(Constants.OK_ADDR_TRIGOUT, bit)
+      result = self.xem.IsTriggered(constants.OK_ADDR_TRIGOUT, bit)
     except :
       log.write("FPGA unable to is triggered, perhaps a multi-thread writing conflict")
     finally :

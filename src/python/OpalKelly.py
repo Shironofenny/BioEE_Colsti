@@ -17,11 +17,10 @@ source_path = source_path + '/ok/ok.py';
 ok = imp.load_source('ok', source_path)
 
 # User defined modules
-import Constants
 import LogManager
 
 class OpalKelly(object):
-  
+
   def __init__(self):
     self.xem = ok.okCFrontPanel()
     self.pll = ok.PLL22393()
