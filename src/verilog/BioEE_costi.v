@@ -272,7 +272,7 @@ staticControlOKInterface switchInterface4 (
 wire [11:0] test_wire;
 
 assign dummyLogic[0] = dacCLK;
-assign dummyLogic[1] = dac2WriteEnable;
+assign dummyLogic[1] = dac2AckDataTrigger;
 assign dummyLogic[2] = dacDin[1];
 assign dummyLogic[3] = dacLoad[1];
 
